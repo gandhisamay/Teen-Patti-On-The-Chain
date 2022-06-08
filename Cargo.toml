@@ -1,11 +1,17 @@
 [package]
-name = "rust-template"
+name = "teen_patti"
 version = "0.1.0"
 authors = ["Near Inc <hello@near.org>"]
 edition = "2018"
 
 [lib]
-crate-type = ["cdylib"]
+name = "library"
+path = "./src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "teen_patti_binary"
+path = "src/main.rs"
 
 [dependencies]
 near-sdk = "4.0.0-pre.4"
