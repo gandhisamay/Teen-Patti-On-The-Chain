@@ -7,7 +7,7 @@ edition = "2021"
 
 [lib]
 name = "library"
-path = "../teenpatti/src/lib.rs"
+path = "./teenpatti/src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
