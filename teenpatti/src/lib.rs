@@ -1,2 +1,2 @@
-pub use contract::Contract;
+pub use contract::Game;
 mod contract;
