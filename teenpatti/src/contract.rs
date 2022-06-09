@@ -13,7 +13,7 @@ const CARD_TYPES: [&str; 13] = [
 ];
 
 // const VALUES:LookupMap<String,u16> = LookupMap::new(key_prefix: S)
-// need an efficient datastructure 
+// need an efficient datastructure
 
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
 pub struct Deck {
