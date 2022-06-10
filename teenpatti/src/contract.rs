@@ -16,16 +16,6 @@ const CARD_TYPES: [&str; 13] = [
 ];
 const VALUES: [u16; 13] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
-// static KEYWORDS: phf::Map<&'static str, u16> = phf_map! {
-//     "loop" => 1,
-//     "continue" => 2,
-//     "break" => 3,
-//     "fn" => 4,
-//     "extern" => 5,
-// };
-// const VALUES:LookupMap<String,u16> = LookupMap::new(key_prefix: S)
-// need an efficient datastructure
-
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Deck {
@@ -102,7 +92,7 @@ enum HandType {
     Trail, //3 of same rank
     PureSequence,
     Sequence,
-    Color, //3 cards of the same color,
+    Flush, //3 cards of the same color,
     Pair,  //2 cards of the same rank
     HighCard,
 }
@@ -117,15 +107,24 @@ pub struct Card {
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
-pub struct Player {
-    account_id: AccountId,
-    cards: Vec<Card>,
-    name: String,
-    betting_amount: f64, //tokens staked till now in the game
+pub struct Hand {
+    cards: Vec<Card>,  //list of cards 
     hand_type: HandType,
 }
 
-impl Player {
+impl Hand{
+    pub fn max_card_val(&self) -> u16 {
+        let mut largest = &self.cards[0].value;
+
+        for card in &self.cards {
+            if largest > &card.value {
+                largest = &card.value;
+            }
+        }
+
+        *largest
+    }
+
     pub fn check_for_trail(&mut self) -> bool {
         let cards = &self.cards;
 
@@ -166,7 +165,36 @@ impl Player {
         }
     }
 
-    
+    pub fn set_players_hand_type(&mut self) {
+        if self.check_for_trail() {
+            self.hand_type = HandType::Trail;
+        }
+        //do this according to the hierarchy
+        //
+        // ..
+        else if self.check_for_flush() {
+            self.hand_type = HandType::Flush;
+        } else if self.check_for_pair() {
+            self.hand_type = HandType::Pair;
+        } else {
+            self.hand_type = HandType::HighCard;
+        }
+    }
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Player {
+    account_id: AccountId,
+    hand: Hand,  //cards of the player and its type 
+    name: String,
+    betting_amount: f64, //tokens staked till now in the game
+   
+}
+
+impl Player {
+    // to compare the values of the decks 
+
 }
 
 #[near_bindgen]
