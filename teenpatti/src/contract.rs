@@ -121,8 +121,52 @@ pub struct Player {
     account_id: AccountId,
     cards: Vec<Card>,
     name: String,
-    betting_amount: f64,
+    betting_amount: f64, //tokens staked till now in the game
     hand_type: HandType,
+}
+
+impl Player {
+    pub fn check_for_trail(&mut self) -> bool {
+        let cards = &self.cards;
+
+        if cards[0].value == cards[1].value
+            && cards[0].value == cards[2].value
+            && cards[1].value == cards[2].value
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn check_for_pair(&mut self) -> bool {
+        let cards = &self.cards;
+
+        if cards[0].value == cards[1].value && cards[1].value != cards[2].value {
+            true
+        } else if cards[1].value == cards[2].value && cards[1].value != cards[0].value {
+            true
+        } else if cards[0].value == cards[2].value && cards[0].value != cards[1].value {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn check_for_flush(&mut self) -> bool {
+        let cards = &self.cards;
+
+        if cards[0].suit == cards[1].suit
+            && cards[0].suit == cards[2].suit
+            && cards[1].suit == cards[2].suit
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    
 }
 
 #[near_bindgen]
