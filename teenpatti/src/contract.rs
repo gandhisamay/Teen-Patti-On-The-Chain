@@ -5,6 +5,7 @@ use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{env, log, near_bindgen, AccountId, PanicOnDefault, Promise};
 use rand;
 use rand::seq::SliceRandom;
+use std::iter::Extend;
 
 // 5 Ⓝ in yoctoNEAR
 const INITIAL_BET: u128 = 5_000_000_000_000_000_000_000_000;
@@ -95,6 +96,7 @@ enum HandType {
     Flush, //3 cards of the same color,
     Pair,  //2 cards of the same rank
     HighCard,
+    None,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
@@ -194,6 +196,17 @@ pub struct Player {
 
 impl Player {
     // to compare the values of the decks 
+    pub fn from(account_id: String, name: String, cards: Vec<Card>, betting_amount: f64) -> Self{
+        Self{
+            account_id: account_id.parse::<AccountId>().unwrap(),
+            name,
+            hand: Hand{
+                cards,
+                hand_type: HandType::None,
+            },
+            betting_amount,
+        }
+    }
 
 }
 
@@ -215,6 +228,21 @@ impl Game {
     pub fn get_init_amount() -> u128 {
         INITIAL_BET
     }
+
+    pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>){
+        for p in input_players{
+            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0);
+            self.players.push(player);
+        }
+    }
+}
+
+//Helper structs
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct AddPlayerInput{
+    pub account_id: String,
+    pub name: String
 }
 
 // use the attribute below for unit tests
@@ -339,10 +367,49 @@ mod tests {
 
     //todo SAMAY
     #[test]
-    pub fn check_for_sequence() {}
+    pub fn check_for_sequence() {
+        let mut cards: Vec<Card> = Deck::new().generate_hand();
+
+        let mut cardsValue: Vec<i32> = Vec::new();
+
+        for card in cards{
+            cardsValue.push(card.value as i32);
+        }
+
+        cardsValue.sort();
+
+        if (cardsValue.get(2).unwrap()-cardsValue.get(1).unwrap() == 1) && (cardsValue.get(1).unwrap()-cardsValue.get(0).unwrap() == 1){
+            assert_eq!(true, "This is sequence");
+        }
+        else{
+            assert_eq!(false, "This is not sequence");
+        }
+    }
 
     #[test]
-    pub fn check_for_pure_sequence() {}
+    pub fn check_for_pure_sequence() {
+        let mut cards: Vec<Card> = Deck::new().generate_hand();
+
+        let mut cardsValue: Vec<i32> = Vec::new();
+
+        for card in cards{
+            cardsValue.push(card.value as i32);
+        }
+
+        cardsValue.sort();
+
+        if (cardsValue.get(2).unwrap()-cardsValue.get(1).unwrap() == 1) && (cardsValue.get(1).unwrap()-cardsValue.get(0).unwrap() == 1){
+            if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit){
+                assert_eq!(true, "This is pure sequence");
+            }
+            else{
+                assert_eq!(false, "This is not pure sequence");
+            }
+        }
+        else{
+            assert_eq!(false, "This is not pure sequence");
+        }
+    }
 
     #[test] //not needed
     pub fn check_for_high_card() {

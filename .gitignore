@@ -1,1 +1,6 @@
 /target
+build.sh
+delete.sh
+deploy.sh
+method_calls.sh
+test.sh

@@ -12,7 +12,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 near-sdk = "4.0.0"
-rand = "0.8.5"
 getrandom = { version = "0.2.6", features = ["js"] }
 
 
