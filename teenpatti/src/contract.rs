@@ -1,8 +1,10 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, UnorderedSet};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env, log, near_bindgen, AccountId, PanicOnDefault, Promise};
-// use ::phf::{phf_map, Map};
+use near_sdk::{env, log, near_bindgen, AccountId, PanicOnDefault, Promise,};
+use near_sdk::env::random_seed;
+use rand;
+use rand::seq::SliceRandom;
 
 // 5 Ⓝ in yoctoNEAR
 const INITIAL_BET: u128 = 5_000_000_000_000_000_000_000_000;
@@ -24,7 +26,7 @@ const VALUES: [u16; 13] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 // const VALUES:LookupMap<String,u16> = LookupMap::new(key_prefix: S)
 // need an efficient datastructure
 
-#[derive(BorshDeserialize, BorshSerialize, Debug,Serialize,Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Deck {
     cards: Vec<Card>,
@@ -54,9 +56,24 @@ impl Deck {
                 cards.insert(cards.len(), card);
             }
         }
-        
-        // generating the deck 
+
+        // shuffle the cards
+        // let mut rng = thread_rng();
+        // cards.shuffle(&mut rng);
+
+        // generating the deck
         Deck { cards: cards }
+    }
+
+    // generates hand for one player
+    pub fn generate_hand(&self) -> Vec<Card> {
+        // let cards:Vec<Card> = Vec::new();
+        let hand: Vec<Card> = self
+            .cards
+            .choose_multiple(&mut rand::thread_rng(), 3).cloned()
+            .collect();
+        // Chooses amount elements from the slice at random, without repetition, and in random order.
+        hand
     }
 }
 
@@ -77,7 +94,7 @@ enum SuitType {
     Diamond,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Card {
     card_type: String,
@@ -105,14 +122,16 @@ pub struct Game {
 #[near_bindgen]
 impl Game {
 
-    pub fn start_game()->Deck {
+    pub fn start_game() -> Vec<Card> {
         let deck = Deck::new();
-        return deck;
+        return deck.cards;
     }
 
-    pub fn get_init_amount()->u128 {
+    pub fn get_init_amount() -> u128 {
         INITIAL_BET
     }
+
+    pub fn distribute_hand(&mut self) {}
 }
 
 // use the attribute below for unit tests
@@ -153,6 +172,33 @@ mod tests {
                 };
                 println!("{:?}", card);
                 cards.insert(cards.len(), card);
+            }
+        }
+    }
+
+    #[test]
+    fn generate_hand() {
+        let deck = Deck::new();
+        // let cards:Vec<Card> = Vec::new();
+        let hand: Vec<&Card> = deck
+            .cards
+            .choose_multiple(&mut rand::thread_rng(), 3).into_iter()
+            .collect();
+        // Chooses amount elements from the slice at random, without repetition, and in random order.
+        for h in hand {
+            println!("{:?}", h);
+        }       
+    }
+
+    #[test]
+    fn generate_hand_for_each() {
+        let deck = Deck::new();
+        let num_of_pl = 3;
+        for i in [0..num_of_pl] {
+            let hand = deck.generate_hand();
+            println!("New player.........");
+            for h in &hand {
+                println!("{:?}",h);
             }
         }
     }
