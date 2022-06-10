@@ -202,14 +202,68 @@ mod tests {
         }
     }
 
-    #[test]
-    pub fn check_for_trail() {}
+    #[test] //three of a kind
+    pub fn check_for_trail() {
+        let cards = Deck::new().generate_hand();
+
+        if cards[0].value == cards[1].value
+            && cards[0].value == cards[2].value
+            && cards[1].value == cards[2].value
+        {
+            assert!(true, "This is trail")
+        } else {
+            assert!(false, "not trail");
+        }
+    }
 
     #[test]
-    pub fn check_for_pair() {}
+    pub fn check_for_pair() {
+        let mut cards: Vec<Card> = Deck::new().generate_hand();
+
+        if cards[0].value == cards[1].value && cards[1].value != cards[2].value {
+            println!("true");
+        } else if cards[1].value == cards[2].value && cards[1].value != cards[0].value {
+            println!("true");
+        } else if cards[0].value == cards[2].value && cards[0].value != cards[1].value {
+            println!("true");
+        } else {
+            println!("false");
+        }
+    }
 
     #[test]
-    pub fn check_for_flush() {} //all cards of the same suit
+    pub fn check_for_flush() {
+        let mut cards: Vec<Card> = Deck::new().generate_hand();
+
+        // let card1 = Card {
+        //     card_type: "J".to_owned(),
+        //     suit: "Club".to_owned(),
+        //     value: 11,
+        // };
+        // let card2 = Card {
+        //     card_type: "3".to_owned(),
+        //     suit: "Club".to_owned(),
+        //     value: 11,
+        // };
+        // let card3 = Card {
+        //     card_type: "4".to_owned(),
+        //     suit: "Club".to_owned(),
+        //     value: 11,
+        // };
+
+        // cards.push(card1);
+        // cards.push(card2);
+        // cards.push(card3);
+
+        if cards[0].suit == cards[1].suit
+            && cards[0].suit == cards[2].suit
+            && cards[1].suit == cards[2].suit
+        {
+            assert!(true, "This is flush ")
+        } else {
+            assert!(false, "not flush");
+        }
+    } //all cards of the same suit
 
     //todo SAMAY
     #[test]
