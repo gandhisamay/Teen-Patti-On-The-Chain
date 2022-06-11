@@ -1,12 +1,14 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{near_bindgen, AccountId};
+use near_sdk::{near_bindgen, AccountId, Promise};
 use std::convert::From;
 use std::convert::Into;
 
 // 5 Ⓝ in yoctoNEAR
 const INITIAL_BET: u128 = 5_000_000_000_000_000_000_000_000;
+
+const INITIAL_COLLATERAL: u128 = 100_000_000_000_000_000_000_000_000;
 
 const SUITS: [&str; 4] = ["Spade", "Heart", "Club", "Diamond"];
 
@@ -262,6 +264,7 @@ pub struct Player {
     pub betting_amount: f64, //tokens staked till now in the game
     pub is_folded: bool,
     pub play_blind: bool,
+    pub balance_amount: f64,
 }
 
 impl Player {
@@ -272,6 +275,7 @@ impl Player {
         betting_amount: f64,
         is_folded: bool,
         play_blind: bool,
+        balance_amount: f64,
     ) -> Self {
         Self {
             account_id: account_id.parse::<AccountId>().unwrap(),
@@ -280,11 +284,27 @@ impl Player {
             betting_amount,
             is_folded,
             play_blind,
+            balance_amount,
         }
     }
 
     pub fn fold(&mut self) {
         self.is_folded = true;
+    }
+
+    pub fn deposit_init_collateral(mut self) {
+        // doesnt check if the account id is valid or not 
+        let player_account_id: AccountId = self.account_id;
+
+        //   the master account for the teenpatti host
+        let teenpatti_master_acc_id: AccountId = "teenpatti.testnet"
+            .parse::<AccountId>()
+            .expect("teenpatti.testnet account doesnt exist");
+
+        // transfer the collateral amount
+        // todo
+
+        // hardcoded 
     }
 }
 
@@ -306,13 +326,13 @@ impl Game {
         INITIAL_BET
     }
 
-    pub fn get_players_data(self) ->Vec<Player>{
-       self.players
+    pub fn get_players_data(self) -> Vec<Player> {
+        self.players
     }
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
         for p in input_players {
-            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false);
+            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false,100.0);
             self.players.push(player);
         }
     }
