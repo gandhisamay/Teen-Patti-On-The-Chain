@@ -266,7 +266,7 @@ pub struct Player {
     pub is_folded: bool,
     pub play_blind: bool,
     pub balance_amount: f64,
-    pub player_action: PlayerActions,
+    // pub player_action: PlayerActions,
 }
 
 impl Player {
@@ -278,17 +278,19 @@ impl Player {
         is_folded: bool,
         play_blind: bool,
         balance_amount: f64,
-        player_action: PlayerActions,
+        // player_action: PlayerActions,
     ) -> Self {
         Self {
-            account_id: account_id.parse::<AccountId>().expect("failed to parse account id"),
+            account_id: account_id
+                .parse::<AccountId>()
+                .expect("failed to parse account id"),
             name,
             hand: Hand { cards },
             betting_amount,
             is_folded,
             play_blind,
             balance_amount,
-            player_action,
+            // player_action,
         }
     }
 
@@ -313,7 +315,7 @@ impl Player {
 
     // performs basic validation and returns the enum along with the amount, where the main logic is handled
     pub fn raise_amount(&mut self, raise_amount: f64) -> PlayerActions {
-        if (raise_amount > self.balance_amount) {
+        if raise_amount > self.balance_amount {
             env::panic_str("ERR: not enough balance")
         } else {
             // decrease from the balance and increase the betting amount
@@ -360,24 +362,26 @@ impl Game {
     }
 
     pub fn get_player(self, account_id: AccountId) -> Player {
-        let mut player_data: Player = Player::from(
-            String::from("harshrathi2511.testnet"),
-            String::from(""),
-            Vec::new(),
-            0.0,
-            false,
-            false,
-            100.0,
-            PlayerActions::Idle,
-        );
-
         for player in self.players {
-            if (player.account_id == account_id) {
-                player_data = player;
+            if player.account_id == account_id {
+                // println!("{:?}",player);
+                return player;
             }
         }
 
-        player_data
+        let player1 = Player {
+            account_id: "default.testnet"
+                .parse::<AccountId>()
+                .expect("failed to parse account id"),
+            hand: Hand { cards: Vec::new() },
+            name: String::from("dummy"),
+            betting_amount: 0.0,
+            is_folded: false,
+            play_blind: false,
+            balance_amount: 100.0,
+        };
+
+        player1
     }
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
@@ -390,7 +394,7 @@ impl Game {
                 false,
                 false,
                 100.0,
-                PlayerActions::Idle,
+                // PlayerActions::Idle,
             );
             self.players.push(player);
             // let player1 = player.clone();
@@ -399,7 +403,7 @@ impl Game {
     }
 
     pub fn play(&mut self, action: PlayerActions, player: &mut Player) {
-        let player_action = &player.player_action;
+        let player_action = action;
 
         match player_action {
             PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
@@ -510,128 +514,176 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn generate_hand() {
-    //     let deck = Deck::new();
-    //     // let cards:Vec<Card> = Vec::new();
-    //     let hand: Vec<&Card> = deck
-    //         .cards
-    //         .choose_multiple(&mut rand::thread_rng(), 3)
-    //         .into_iter()
-    //         .collect();
-    //     // Chooses amount elements from the slice at random, without repetition, and in random order.
-    //     for h in hand {
-    //         println!("{:?}", h);
+    #[test]
+    pub fn get_player() {
+        let mut player_list: Vec<Player> = Vec::new();
+        let mut cards: Vec<Card> = Vec::new();
+
+        let card1 = Card {
+            card_type: "J".to_owned(),
+            suit: "Club".to_owned(),
+            value: 11,
+        };
+        let card2 = Card {
+            card_type: "3".to_owned(),
+            suit: "Club".to_owned(),
+            value: 11,
+        };
+        let card3 = Card {
+            card_type: "4".to_owned(),
+            suit: "Club".to_owned(),
+            value: 11,
+        };
+
+        cards.push(card1);
+        cards.push(card2);
+        cards.push(card3);
+
+        let player1 = Player {
+            account_id: "harshrathi2511.testnet"
+                .parse::<AccountId>()
+                .expect("failed to parse account id"),
+            hand: Hand { cards: cards },
+            name: String::from("Harsh Rathi"),
+            betting_amount: 0.0,
+            is_folded: false,
+            play_blind: false,
+            balance_amount: 100.0,
+        };
+        let player2 = Player {
+            account_id: "samay200.testnet"
+                .parse::<AccountId>()
+                .expect("failed to parse account id"),
+            hand: Hand { cards: Vec::new() },
+            name: String::from("Samay Gandhi"),
+            betting_amount: 0.0,
+            is_folded: false,
+            play_blind: false,
+            balance_amount: 100.0,
+        };
+        player_list.push(player1);
+        player_list.push(player2);
+
+        let account_id = "harshrathi2511.testnet"
+            .parse::<AccountId>()
+            .expect("failed to parse account id");
+
+        for player in player_list {
+            if player.account_id == account_id {
+                println!("{:?}", player);
+            }
+        }
+
+        // println!("{:?}", player_data);
+    }
+
+    // #[test] //three of a kind
+    // pub fn check_for_trail() {
+    //     let cards = Deck::new().generate_hand();
+
+    //     if cards[0].value == cards[1].value
+    //         && cards[0].value == cards[2].value
+    //         && cards[1].value == cards[2].value
+    //     {
+    //         assert!(true, "This is trail")
+    //     } else {
+    //         assert!(false, "not trail");
     //     }
     // }
 
-    #[test] //three of a kind
-    pub fn check_for_trail() {
-        let cards = Deck::new().generate_hand();
+    // #[test]
+    // pub fn check_for_pair() {
+    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
 
-        if cards[0].value == cards[1].value
-            && cards[0].value == cards[2].value
-            && cards[1].value == cards[2].value
-        {
-            assert!(true, "This is trail")
-        } else {
-            assert!(false, "not trail");
-        }
-    }
+    //     if cards[0].value == cards[1].value && cards[1].value != cards[2].value {
+    //         println!("true");
+    //     } else if cards[1].value == cards[2].value && cards[1].value != cards[0].value {
+    //         println!("true");
+    //     } else if cards[0].value == cards[2].value && cards[0].value != cards[1].value {
+    //         println!("true");
+    //     } else {
+    //         println!("false");
+    //     }
+    // }
 
-    #[test]
-    pub fn check_for_pair() {
-        let mut cards: Vec<Card> = Deck::new().generate_hand();
+    // #[test]
+    // pub fn check_for_flush() {
+    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
 
-        if cards[0].value == cards[1].value && cards[1].value != cards[2].value {
-            println!("true");
-        } else if cards[1].value == cards[2].value && cards[1].value != cards[0].value {
-            println!("true");
-        } else if cards[0].value == cards[2].value && cards[0].value != cards[1].value {
-            println!("true");
-        } else {
-            println!("false");
-        }
-    }
+    //     // let card1 = Card {
+    //     //     card_type: "J".to_owned(),
+    //     //     suit: "Club".to_owned(),
+    //     //     value: 11,
+    //     // };
+    //     // let card2 = Card {
+    //     //     card_type: "3".to_owned(),
+    //     //     suit: "Club".to_owned(),
+    //     //     value: 11,
+    //     // };
+    //     // let card3 = Card {
+    //     //     card_type: "4".to_owned(),
+    //     //     suit: "Club".to_owned(),
+    //     //     value: 11,
+    //     // };
 
-    #[test]
-    pub fn check_for_flush() {
-        let mut cards: Vec<Card> = Deck::new().generate_hand();
+    //     // cards.push(card1);
+    //     // cards.push(card2);
+    //     // cards.push(card3);
 
-        // let card1 = Card {
-        //     card_type: "J".to_owned(),
-        //     suit: "Club".to_owned(),
-        //     value: 11,
-        // };
-        // let card2 = Card {
-        //     card_type: "3".to_owned(),
-        //     suit: "Club".to_owned(),
-        //     value: 11,
-        // };
-        // let card3 = Card {
-        //     card_type: "4".to_owned(),
-        //     suit: "Club".to_owned(),
-        //     value: 11,
-        // };
+    //     if cards[0].suit == cards[1].suit
+    //         && cards[0].suit == cards[2].suit
+    //         && cards[1].suit == cards[2].suit
+    //     {
+    //         assert!(true, "This is flush ")
+    //     } else {
+    //         assert!(false, "not flush");
+    //     }
+    // } //all cards of the same suit
 
-        // cards.push(card1);
-        // cards.push(card2);
-        // cards.push(card3);
+    // //todo SAMAY
+    // #[test]
+    // pub fn check_for_sequence() {
+    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
 
-        if cards[0].suit == cards[1].suit
-            && cards[0].suit == cards[2].suit
-            && cards[1].suit == cards[2].suit
-        {
-            assert!(true, "This is flush ")
-        } else {
-            assert!(false, "not flush");
-        }
-    } //all cards of the same suit
+    //     let mut cards_value: Vec<i32> = Vec::new();
 
-    //todo SAMAY
-    #[test]
-    pub fn check_for_sequence() {
-        let mut cards: Vec<Card> = Deck::new().generate_hand();
+    //     for card in cards {
+    //         cards_value.push(card.value as i32);
+    //     }
 
-        let mut cards_value: Vec<i32> = Vec::new();
+    //     cards_value.sort();
 
-        for card in cards {
-            cards_value.push(card.value as i32);
-        }
+    //     if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
+    //         && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
+    //     {
+    //         assert_eq!(true, "This is sequence");
+    //     } else {
+    //         assert_eq!(false, "This is not sequence");
+    //     }
+    // }
 
-        cards_value.sort();
+    // #[test]
+    // pub fn check_for_pure_sequence() {
+    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
 
-        if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
-            && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
-        {
-            assert_eq!(true, "This is sequence");
-        } else {
-            assert_eq!(false, "This is not sequence");
-        }
-    }
+    //     let mut cards_value: Vec<i32> = Vec::new();
 
-    #[test]
-    pub fn check_for_pure_sequence() {
-        let mut cards: Vec<Card> = Deck::new().generate_hand();
+    //     for card in cards {
+    //         cards_value.push(card.value as i32);
+    //     }
 
-        let mut cards_value: Vec<i32> = Vec::new();
+    //     cards_value.sort();
 
-        for card in cards {
-            cards_value.push(card.value as i32);
-        }
-
-        cards_value.sort();
-
-        if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
-            && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
-        {
-            if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit) {
-                assert_eq!(true, "This is pure sequence");
-            } else {
-                assert_eq!(false, "This is not pure sequence");
-            }
-        } else {
-            assert_eq!(false, "This is not pure sequence");
-        }
-    }
+    //     if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
+    //         && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
+    //     {
+    //         if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit) {
+    //             assert_eq!(true, "This is pure sequence");
+    //         } else {
+    //             assert_eq!(false, "This is not pure sequence");
+    //         }
+    //     } else {
+    //         assert_eq!(false, "This is not pure sequence");
+    //     }
+    // }
 }

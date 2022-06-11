@@ -29,16 +29,8 @@ near view game.teenpatti.testnet game_state
 echo ""
 
 
-# near call game.teenpatti.testnet play '{
-#     "account_id": "harshrathi2511.testnet",
-#     "action" : "PlayerActions::Fold",
-# }'
-
 echo ""
-echo ""
-echo "..playing..."
-
-
+echo "getting a player by its account id working "
 near call game.teenpatti.testnet get_player  '{
     "account_id" : "harshrathi2511.testnet"
 }' --accountId teenpatti.testnet
