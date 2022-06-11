@@ -10,8 +10,13 @@ name = "library"
 path = "./teenpatti/src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "init"
+path = "./teenpatti/src/init.rs"
+
 [dependencies]
 near-sdk = "4.0.0"
+text_io = "0.1.10"
 
 
 [profile.release]

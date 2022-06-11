@@ -1,0 +1,4 @@
+betting 
+taking initial money
+giving final money to everyone (Wallet)
+    
