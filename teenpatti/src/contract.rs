@@ -45,12 +45,6 @@ impl Deck {
                 cards.insert(cards.len(), card);
             }
         }
-
-        // shuffle the cards
-        // let mut rng = thread_rng();
-        // cards.shuffle(&mut rng);
-
-        // generating the deck
         Deck { cards: cards }
     }
 
@@ -310,6 +304,10 @@ impl Game {
 
     pub fn get_init_amount() -> u128 {
         INITIAL_BET
+    }
+
+    pub fn get_players_data(self) ->Vec<Player>{
+       self.players
     }
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
