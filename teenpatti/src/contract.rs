@@ -128,7 +128,7 @@ impl From<HandType> for i32 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone,PartialEq)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Card {
     card_type: String,
@@ -136,7 +136,7 @@ pub struct Card {
     value: u16,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone,PartialEq)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Hand {
     cards: Vec<Card>, //list of cards
@@ -256,7 +256,7 @@ impl Hand {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone,PartialEq)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Player {
     pub account_id: AccountId,
@@ -377,6 +377,42 @@ impl Game {
 
         player1
     }
+    pub fn get_unfolded_players(player_list: &Vec<Player>) -> Vec<Player> {
+        let mut unfolded_players: Vec<Player> = Vec::new();
+        for player in player_list {
+            if player.is_folded == false {
+                unfolded_players.push(player.clone())
+            }
+        }
+        unfolded_players
+    }
+
+    pub fn get_player_by_account_id(account_id: AccountId, player_list: &Vec<Player>) -> Player {
+        for player in player_list {
+            if player.account_id == account_id {
+                return player.clone();
+            }
+        }
+
+        let player1 = Player {
+            account_id: "dummy.testnet"
+                .parse::<AccountId>()
+                .expect("failed to parse account id"),
+            hand: Hand { cards: Vec::new() },
+            name: String::from("dummy"),
+            betting_amount: 0.0,
+            is_folded: false,
+            play_blind: false,
+            balance_amount: 100.0,
+        };
+        player1
+    }
+
+    pub fn print_unfolded(unfolded_list: &Vec<Player>) {
+        for player in unfolded_list {
+            println!("{:?}", player);
+        }
+    }
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
         for p in input_players {
@@ -397,25 +433,55 @@ impl Game {
     }
 
     pub fn play(&mut self, action: PlayerActions, player: &mut Player) {
-        let player_action = action;
+        let account_id = "harshrathi2511.testnet"
+            .parse::<AccountId>()
+            .expect("failed to parse account id");
 
-        match player_action {
+        // println!("{:?}", player_data);
+        let action = PlayerActions::Fold;
+        let current_turn_player = &self.players[0];
+        let mut unfolded_players = get_unfolded_players(&player_list);
+        let mut player = get_player_by_account_id(account_id, &player_list);
+        let mut tokens_staked = 0.0;
+
+        if current_turn_player.account_id != player.account_id {
+            env::panic_str("ERR: NOT YOUR TURN");
+        }
+
+        match action {
             PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
             PlayerActions::Fold => {
-                player.fold_cards();
+                print_unfolded(&unfolded_players);
 
-                // add in the list
-                let mut player = player.clone();
-                self.folded_players.insert(1, player);
+                println!("FOLDING");
+                if let Some(index) = unfolded_players.iter().position(|x| *x == player) {
+                    println!("{}", index);
+                    println!("entered here");
+                    unfolded_players.remove(index);
+                    // self.unfolded_players  equivalent
+                    print_unfolded(&unfolded_players);
+                } else {
+                    env::panic_str("ERR: could not find the player in the list of unfolded people");
+                }
+
+                // fold the cards of the user
+                player.fold_cards();
+                // or
+                player.is_folded = true;
             }
             PlayerActions::Raise(raise_amount) => {
-                // raise amount in the token basket
-                self.tokens_staked += raise_amount;
+                player.raise_amount(raise_amount);
+                //self.tokens_staked
+                tokens_staked += raise_amount;
             }
             PlayerActions::Show => {
-                let len = self.players.len() - self.folded_players.len();
-                // let mut player = player.clone();
-                player.show_cards(len);
+                if unfolded_players.len() == 2 {
+                    // run winner script
+                } else {
+                    env::panic_str(
+                        "ERR:cant use the show action when more than 2 players are remaining",
+                    )
+                }
             }
         }
     }
@@ -539,9 +605,9 @@ mod tests {
         player1
     }
 
-    pub fn print_unfolded(unfolded_list:&Vec<Player>){
+    pub fn print_unfolded(unfolded_list: &Vec<Player>) {
         for player in unfolded_list {
-            println!("{:?}",player);
+            println!("{:?}", player);
         }
     }
 
@@ -617,28 +683,23 @@ mod tests {
 
                 println!("FOLDING");
                 if let Some(index) = unfolded_players.iter().position(|x| *x == player) {
-                    println!("{}",index);
+                    println!("{}", index);
                     println!("entered here");
                     unfolded_players.remove(index);
                     // self.unfolded_players  equivalent
                     print_unfolded(&unfolded_players);
-
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
 
-                // fold the cards of the user 
+                // fold the cards of the user
                 player.fold_cards();
-                // or 
-                player.is_folded= true;
-
-               
-
-                
+                // or
+                player.is_folded = true;
             }
             PlayerActions::Raise(raise_amount) => {
                 player.raise_amount(raise_amount);
-                //self.tokens_staked 
+                //self.tokens_staked
                 tokens_staked += raise_amount;
             }
             PlayerActions::Show => {
