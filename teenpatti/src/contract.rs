@@ -1,11 +1,11 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, UnorderedSet};
-use near_sdk::env::{random_seed, random_seed_array};
+use near_sdk::collections::{LookupMap};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env, log, near_bindgen, AccountId, PanicOnDefault, Promise};
+use near_sdk::{near_bindgen, AccountId};
 use rand;
 use rand::seq::SliceRandom;
-use std::iter::Extend;
+use std::convert::From;
+use std::convert::Into;
 
 // 5 Ⓝ in yoctoNEAR
 const INITIAL_BET: u128 = 5_000_000_000_000_000_000_000_000;
@@ -96,6 +96,19 @@ pub enum HandType {
     Flush, //3 cards of the same color,
     Pair,  //2 cards of the same rank
     HighCard,
+}
+
+impl From<HandType> for i32{
+    fn from(val: HandType) -> Self{
+        match val{
+            HandType::Trail => 1,
+            HandType::PureSequence => 2,
+            HandType::Sequence => 3,
+            HandType::Flush => 4,
+            HandType::Pair => 5,
+            HandType::HighCard => 5,
+        }
+    }
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
@@ -209,7 +222,7 @@ impl Hand {
         }
     }
 
-    pub fn get_players_hand_type(&self) -> HandType{
+    pub fn get_players_hand_type(&self) -> HandType {
         if self.check_for_trail() {
             HandType::Trail
         } else if self.check_for_pure_sequence() {
@@ -249,9 +262,7 @@ impl Player {
         Self {
             account_id: account_id.parse::<AccountId>().unwrap(),
             name,
-            hand: Hand {
-                cards,
-            },
+            hand: Hand { cards },
             betting_amount,
             is_folded,
             play_blind,
@@ -288,17 +299,17 @@ impl Game {
         }
     }
 
-    pub fn find_winner(&mut self){
+    pub fn find_winner(&mut self) -> &Player {
         //first find the players who have not folded
-        let player1 : &Player;
-        let player2 : &Player;
+        let player1: &Player;
+        let player2: &Player;
 
-        let mut not_folded_players : Vec<&Player> = Vec::new();
+        let mut not_folded_players: Vec<&Player> = Vec::new();
 
         let player_iter = self.players.iter();
 
-        for player in player_iter{
-            if !player.is_folded{
+        for player in player_iter {
+            if !player.is_folded {
                 not_folded_players.push(player);
             }
         }
@@ -306,14 +317,18 @@ impl Game {
         player1 = not_folded_players.get(0).unwrap();
         player2 = not_folded_players.get(1).unwrap();
 
-        let val1 : i32 = match player1.hand.get_players_hand_type(){
-            HandType::Trail => 1,
-            HandType::PureSequence => 2,
-            HandType::Sequence => 3,
-            HandType::Flush => 4,
-            HandType::Pair => 5,
-            _ => 6
-        };
+        let val1: i32 = player1.hand.get_players_hand_type().into();
+        let val2: i32 = player2.hand.get_players_hand_type().into();
+
+        if val1 < val2 {
+            player1
+        }
+        else if val1 == val2 {
+            player1
+        }
+        else{
+            player2
+        }
 
     }
 }
@@ -330,8 +345,8 @@ pub struct AddPlayerInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use near_sdk::test_utils::{get_logs, VMContextBuilder};
-    use near_sdk::{testing_env, AccountId};
+    use near_sdk::test_utils::{VMContextBuilder};
+    use near_sdk::{AccountId};
 
     // part of writing unit tests is setting up a mock context
     // provide a `predecessor` here, it'll modify the default context
