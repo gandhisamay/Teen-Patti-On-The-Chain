@@ -2,5 +2,5 @@
 build.sh
 delete.sh
 deploy.sh
-method_calls.sh
+add_players.sh
 test.sh
