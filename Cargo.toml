@@ -17,6 +17,8 @@ path = "./teenpatti/src/init.rs"
 [dependencies]
 near-sdk = "4.0.0"
 text_io = "0.1.10"
+rand = "0.8.5"
+getrandom = { version = "0.2.6", features = ["js"] }
 
 
 [profile.release]

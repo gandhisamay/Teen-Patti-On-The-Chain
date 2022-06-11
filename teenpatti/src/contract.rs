@@ -18,7 +18,7 @@ const VALUES: [u16; 13] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Deck {
-    cards: Vec<Card>,
+    pub cards: Vec<Card>,
 }
 
 impl Deck {
@@ -128,9 +128,9 @@ impl From<HandType> for i32 {
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Card {
-    card_type: String,
-    suit: String,
-    value: u16,
+    pub card_type: String,
+    pub suit: String,
+    pub value: u16,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
@@ -312,7 +312,7 @@ impl Game {
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
         for p in input_players {
-            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false);
+            let player = Player::from(p.account_id, p.name, p.cards, 0.0, false, false);
             self.players.push(player);
         }
     }
@@ -361,6 +361,7 @@ impl Game {
 pub struct AddPlayerInput {
     pub account_id: String,
     pub name: String,
+    pub cards: Vec<Card>
 }
 
 // use the attribute below for unit tests
