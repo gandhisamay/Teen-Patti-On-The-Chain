@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap};
+use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{near_bindgen, AccountId};
 use rand;
@@ -98,9 +98,9 @@ pub enum HandType {
     HighCard,
 }
 
-impl From<HandType> for i32{
-    fn from(val: HandType) -> Self{
-        match val{
+impl From<HandType> for i32 {
+    fn from(val: HandType) -> Self {
+        match val {
             HandType::Trail => 1,
             HandType::PureSequence => 2,
             HandType::Sequence => 3,
@@ -322,14 +322,18 @@ impl Game {
 
         if val1 < val2 {
             player1
-        }
-        else if val1 == val2 {
-            player1
-        }
-        else{
+        } else if val1 == val2 {
+            let max_card1 = player1.hand.max_card_val();
+            let max_card2 = player2.hand.max_card_val();
+
+            if max_card1 >= max_card2 {
+                player1
+            } else {
+                player2
+            }
+        } else {
             player2
         }
-
     }
 }
 
@@ -345,8 +349,8 @@ pub struct AddPlayerInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use near_sdk::test_utils::{VMContextBuilder};
-    use near_sdk::{AccountId};
+    use near_sdk::test_utils::VMContextBuilder;
+    use near_sdk::AccountId;
 
     // part of writing unit tests is setting up a mock context
     // provide a `predecessor` here, it'll modify the default context
