@@ -88,7 +88,7 @@ enum SuitType {
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
-enum HandType {
+pub enum HandType {
     // init field if required
     Trail, //3 of same rank
     PureSequence,
@@ -96,7 +96,6 @@ enum HandType {
     Flush, //3 cards of the same color,
     Pair,  //2 cards of the same rank
     HighCard,
-    None,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
@@ -110,11 +109,10 @@ pub struct Card {
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Hand {
-    cards: Vec<Card>,  //list of cards 
-    hand_type: HandType,
+    cards: Vec<Card>, //list of cards
 }
 
-impl Hand{
+impl Hand {
     pub fn max_card_val(&self) -> u16 {
         let mut largest = &self.cards[0].value;
 
@@ -127,7 +125,7 @@ impl Hand{
         *largest
     }
 
-    pub fn check_for_trail(&mut self) -> bool {
+    pub fn check_for_trail(&self) -> bool {
         let cards = &self.cards;
 
         if cards[0].value == cards[1].value
@@ -140,7 +138,7 @@ impl Hand{
         }
     }
 
-    pub fn check_for_pair(&mut self) -> bool {
+    pub fn check_for_pair(&self) -> bool {
         let cards = &self.cards;
 
         if cards[0].value == cards[1].value && cards[1].value != cards[2].value {
@@ -154,7 +152,7 @@ impl Hand{
         }
     }
 
-    pub fn check_for_flush(&mut self) -> bool {
+    pub fn check_for_flush(&self) -> bool {
         let cards = &self.cards;
 
         if cards[0].suit == cards[1].suit
@@ -167,19 +165,63 @@ impl Hand{
         }
     }
 
-    pub fn set_players_hand_type(&mut self) {
-        if self.check_for_trail() {
-            self.hand_type = HandType::Trail;
+    pub fn check_for_pure_sequence(&self) -> bool {
+        let cards: Vec<Card> = Deck::new().generate_hand();
+
+        let mut cards_value: Vec<i32> = Vec::new();
+
+        for card in &cards {
+            cards_value.push(card.value as i32);
         }
-        //do this according to the hierarchy
-        //
-        // ..
-        else if self.check_for_flush() {
-            self.hand_type = HandType::Flush;
-        } else if self.check_for_pair() {
-            self.hand_type = HandType::Pair;
+
+        cards_value.sort();
+
+        if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
+            && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
+        {
+            if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit) {
+                true
+            } else {
+                false
+            }
         } else {
-            self.hand_type = HandType::HighCard;
+            false
+        }
+    }
+
+    pub fn check_for_sequence(&self) -> bool {
+        let cards: Vec<Card> = Deck::new().generate_hand();
+
+        let mut cards_value: Vec<i32> = Vec::new();
+
+        for card in cards {
+            cards_value.push(card.value as i32);
+        }
+
+        cards_value.sort();
+
+        if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
+            && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn get_players_hand_type(&self) -> HandType{
+        if self.check_for_trail() {
+            HandType::Trail
+        } else if self.check_for_pure_sequence() {
+            HandType::PureSequence
+        } else if self.check_for_sequence() {
+            HandType::Sequence
+        } else if self.check_for_flush() {
+            HandType::Flush
+        } else if self.check_for_pair() {
+            HandType::Pair
+        } else {
+            HandType::HighCard
         }
     }
 }
@@ -187,35 +229,45 @@ impl Hand{
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Player {
-    account_id: AccountId,
-    hand: Hand,  //cards of the player and its type 
-    name: String,
-    betting_amount: f64, //tokens staked till now in the game
-   
+    pub account_id: AccountId,
+    pub hand: Hand, //cards of the player and its type
+    pub name: String,
+    pub betting_amount: f64, //tokens staked till now in the game
+    pub is_folded: bool,
+    pub play_blind: bool,
 }
 
 impl Player {
-    // to compare the values of the decks 
-    pub fn from(account_id: String, name: String, cards: Vec<Card>, betting_amount: f64) -> Self{
-        Self{
+    pub fn from(
+        account_id: String,
+        name: String,
+        cards: Vec<Card>,
+        betting_amount: f64,
+        is_folded: bool,
+        play_blind: bool,
+    ) -> Self {
+        Self {
             account_id: account_id.parse::<AccountId>().unwrap(),
             name,
-            hand: Hand{
+            hand: Hand {
                 cards,
-                hand_type: HandType::None,
             },
             betting_amount,
+            is_folded,
+            play_blind,
         }
     }
 
+    pub fn fold(&mut self) {
+        self.is_folded = true;
+    }
 }
 
 #[near_bindgen]
 #[derive(Default, BorshDeserialize, BorshSerialize)]
 pub struct Game {
-    players: Vec<Player>,
-    folded: Vec<Player>,
-    tokens_staked: f64,
+    pub players: Vec<Player>,
+    pub tokens_staked: f64,
 }
 
 #[near_bindgen]
@@ -229,20 +281,49 @@ impl Game {
         INITIAL_BET
     }
 
-    pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>){
-        for p in input_players{
-            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0);
+    pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
+        for p in input_players {
+            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false);
             self.players.push(player);
         }
+    }
+
+    pub fn find_winner(&mut self){
+        //first find the players who have not folded
+        let player1 : &Player;
+        let player2 : &Player;
+
+        let mut not_folded_players : Vec<&Player> = Vec::new();
+
+        let player_iter = self.players.iter();
+
+        for player in player_iter{
+            if !player.is_folded{
+                not_folded_players.push(player);
+            }
+        }
+
+        player1 = not_folded_players.get(0).unwrap();
+        player2 = not_folded_players.get(1).unwrap();
+
+        let val1 : i32 = match player1.hand.get_players_hand_type(){
+            HandType::Trail => 1,
+            HandType::PureSequence => 2,
+            HandType::Sequence => 3,
+            HandType::Flush => 4,
+            HandType::Pair => 5,
+            _ => 6
+        };
+
     }
 }
 
 //Helper structs
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
-pub struct AddPlayerInput{
+pub struct AddPlayerInput {
     pub account_id: String,
-    pub name: String
+    pub name: String,
 }
 
 // use the attribute below for unit tests
@@ -370,18 +451,19 @@ mod tests {
     pub fn check_for_sequence() {
         let mut cards: Vec<Card> = Deck::new().generate_hand();
 
-        let mut cardsValue: Vec<i32> = Vec::new();
+        let mut cards_value: Vec<i32> = Vec::new();
 
-        for card in cards{
-            cardsValue.push(card.value as i32);
+        for card in cards {
+            cards_value.push(card.value as i32);
         }
 
-        cardsValue.sort();
+        cards_value.sort();
 
-        if (cardsValue.get(2).unwrap()-cardsValue.get(1).unwrap() == 1) && (cardsValue.get(1).unwrap()-cardsValue.get(0).unwrap() == 1){
+        if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
+            && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
+        {
             assert_eq!(true, "This is sequence");
-        }
-        else{
+        } else {
             assert_eq!(false, "This is not sequence");
         }
     }
@@ -390,23 +472,23 @@ mod tests {
     pub fn check_for_pure_sequence() {
         let mut cards: Vec<Card> = Deck::new().generate_hand();
 
-        let mut cardsValue: Vec<i32> = Vec::new();
+        let mut cards_value: Vec<i32> = Vec::new();
 
-        for card in cards{
-            cardsValue.push(card.value as i32);
+        for card in cards {
+            cards_value.push(card.value as i32);
         }
 
-        cardsValue.sort();
+        cards_value.sort();
 
-        if (cardsValue.get(2).unwrap()-cardsValue.get(1).unwrap() == 1) && (cardsValue.get(1).unwrap()-cardsValue.get(0).unwrap() == 1){
-            if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit){
+        if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
+            && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
+        {
+            if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit) {
                 assert_eq!(true, "This is pure sequence");
-            }
-            else{
+            } else {
                 assert_eq!(false, "This is not pure sequence");
             }
-        }
-        else{
+        } else {
             assert_eq!(false, "This is not pure sequence");
         }
     }
