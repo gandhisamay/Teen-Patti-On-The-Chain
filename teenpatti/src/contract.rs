@@ -1,7 +1,7 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{near_bindgen, AccountId, Promise};
+use near_sdk::{env, near_bindgen, AccountId, Promise};
 use std::convert::From;
 use std::convert::Into;
 
@@ -85,12 +85,13 @@ impl Deck {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
 #[serde(crate = "near_sdk::serde")]
-enum PlayerActions {
+pub enum PlayerActions {
+    Idle,
     Fold,
     Raise { raise_amount: f64 },
-    Show { players_remaining: u16 }, //only when two players are remaining
+    Show, //only when two players are remaining
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
@@ -135,7 +136,7 @@ pub struct Card {
     value: u16,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Hand {
     cards: Vec<Card>, //list of cards
@@ -255,7 +256,7 @@ impl Hand {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Player {
     pub account_id: AccountId,
@@ -265,6 +266,7 @@ pub struct Player {
     pub is_folded: bool,
     pub play_blind: bool,
     pub balance_amount: f64,
+    pub player_action:PlayerActions,
 }
 
 impl Player {
@@ -276,6 +278,7 @@ impl Player {
         is_folded: bool,
         play_blind: bool,
         balance_amount: f64,
+        player_action: PlayerActions,
     ) -> Self {
         Self {
             account_id: account_id.parse::<AccountId>().unwrap(),
@@ -285,6 +288,7 @@ impl Player {
             is_folded,
             play_blind,
             balance_amount,
+            player_action,
         }
     }
 
@@ -293,7 +297,7 @@ impl Player {
     }
 
     pub fn deposit_init_collateral(mut self) {
-        // doesnt check if the account id is valid or not 
+        // doesnt check if the account id is valid or not
         let player_account_id: AccountId = self.account_id;
 
         //   the master account for the teenpatti host
@@ -304,7 +308,37 @@ impl Player {
         // transfer the collateral amount
         // todo
 
-        // hardcoded 
+        // hardcoded
+    }
+
+    // performs basic validation and returns the enum along with the amount, where the main logic is handled
+    pub fn raise_amount(&mut self, raise_amount: f64) -> PlayerActions {
+        if (raise_amount > self.balance_amount) {
+            env::panic_str("ERR: not enough balance")
+        } else {
+            // decrease from the balance and increase the betting amount
+            self.balance_amount -= raise_amount;
+
+            self.betting_amount += raise_amount;
+
+            PlayerActions::Raise {
+                raise_amount: raise_amount,
+            }
+        }
+    }
+
+    pub fn fold_cards() -> PlayerActions {
+        env::log_str("Folded cards");
+
+        PlayerActions::Fold
+    }
+
+    pub fn show_cards(players_remaining: u16) -> PlayerActions {
+        if players_remaining == 2 {
+            PlayerActions::Show
+        } else {
+            env::panic_str("ERR:cant use the show action when more than 2 players are remaining")
+        }
     }
 }
 
@@ -317,14 +351,16 @@ pub struct Game {
 
 #[near_bindgen]
 impl Game {
-    pub fn start_game() -> Vec<Card> {
-        let deck = Deck::new();
-        return deck.cards;
-    }
+    // pub fn get_unfolded_players(&mut self)->Vec<Player> {
+    //     let mut not_folded_players: Vec<Player> = Vec::new();
+    //     for player in &self.players {
+    //         if !player.is_folded {
+    //             not_folded_players.push(player);
+    //         }
+    //     }
 
-    pub fn get_init_amount() -> u128 {
-        INITIAL_BET
-    }
+    //     not_folded_players
+    // }
 
     pub fn get_players_data(self) -> Vec<Player> {
         self.players
@@ -332,8 +368,17 @@ impl Game {
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
         for p in input_players {
-            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false,100.0);
+            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false, 100.0,PlayerActions::Idle);
             self.players.push(player);
+            // let player1 = player.clone();
+            // self.unfolded_players.push(player1);
+        }
+    }
+
+    pub fn start_game(&mut self) {
+        for player in &self.players {
+            let player_action = &player.player_action;
+
         }
     }
 
@@ -551,7 +596,15 @@ mod tests {
     }
 
     #[test] //not needed
-    pub fn check_for_high_card() {
-        // remaining else goes in this
+    pub fn add_players() {
+        let mut input_players: Vec<AddPlayerInput>;
+        let mut players:Vec<Player>;
+        let mut unfolded_players:Vec<Player>;
+        for p in input_players {
+            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false, 100.0);
+            players.push(player);
+            let player1 = player.clone();
+            unfolded_players.push(player1);
+        }
     }
 }
