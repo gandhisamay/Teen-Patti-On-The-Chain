@@ -128,7 +128,7 @@ impl From<HandType> for i32 {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone,PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Card {
     card_type: String,
@@ -136,7 +136,7 @@ pub struct Card {
     value: u16,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone,PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Hand {
     cards: Vec<Card>, //list of cards
@@ -256,7 +256,7 @@ impl Hand {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone,PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Player {
     pub account_id: AccountId,
@@ -294,7 +294,7 @@ impl Player {
         }
     }
 
-    pub fn fold(&mut self) {
+    pub fn fold_cards(&mut self) {
         self.is_folded = true;
     }
 
@@ -314,7 +314,7 @@ impl Player {
     }
 
     // performs basic validation and returns the enum along with the amount, where the main logic is handled
-    pub fn raise_amount(&mut self, raise_amount: f64) -> PlayerActions {
+    pub fn raise_amount(&mut self, raise_amount: f64) -> f64 {
         if raise_amount > self.balance_amount {
             env::panic_str("ERR: not enough balance")
         } else {
@@ -323,14 +323,8 @@ impl Player {
 
             self.betting_amount += raise_amount;
 
-            PlayerActions::Raise(raise_amount)
+            raise_amount
         }
-    }
-
-    pub fn fold_cards() -> PlayerActions {
-        env::log_str("Folded cards");
-
-        PlayerActions::Fold
     }
 
     pub fn show_cards(&mut self, players_remaining: usize) -> PlayerActions {
@@ -408,7 +402,7 @@ impl Game {
         match player_action {
             PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
             PlayerActions::Fold => {
-                player.fold();
+                player.fold_cards();
 
                 // add in the list
                 let mut player = player.clone();
@@ -514,6 +508,43 @@ mod tests {
         }
     }
 
+    pub fn get_unfolded_players(player_list: &Vec<Player>) -> Vec<Player> {
+        let mut unfolded_players: Vec<Player> = Vec::new();
+        for player in player_list {
+            if player.is_folded == false {
+                unfolded_players.push(player.clone())
+            }
+        }
+        unfolded_players
+    }
+
+    pub fn get_player_by_account_id(account_id: AccountId, player_list: &Vec<Player>) -> Player {
+        for player in player_list {
+            if player.account_id == account_id {
+                return player.clone();
+            }
+        }
+
+        let player1 = Player {
+            account_id: "dummy.testnet"
+                .parse::<AccountId>()
+                .expect("failed to parse account id"),
+            hand: Hand { cards: Vec::new() },
+            name: String::from("dummy"),
+            betting_amount: 0.0,
+            is_folded: false,
+            play_blind: false,
+            balance_amount: 100.0,
+        };
+        player1
+    }
+
+    pub fn print_unfolded(unfolded_list:&Vec<Player>){
+        for player in unfolded_list {
+            println!("{:?}",player);
+        }
+    }
+
     #[test]
     pub fn get_player() {
         let mut player_list: Vec<Player> = Vec::new();
@@ -568,122 +599,57 @@ mod tests {
             .parse::<AccountId>()
             .expect("failed to parse account id");
 
-        for player in player_list {
-            if player.account_id == account_id {
-                println!("{:?}", player);
-            }
+        // println!("{:?}", player_data);
+        let action = PlayerActions::Fold;
+        let current_turn_player = &player_list[0];
+        let mut unfolded_players = get_unfolded_players(&player_list);
+        let mut player = get_player_by_account_id(account_id, &player_list);
+        let mut tokens_staked = 0.0;
+
+        if current_turn_player.account_id != player.account_id {
+            env::panic_str("ERR: NOT YOUR TURN");
         }
 
-        // println!("{:?}", player_data);
+        match action {
+            PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
+            PlayerActions::Fold => {
+                print_unfolded(&unfolded_players);
+
+                println!("FOLDING");
+                if let Some(index) = unfolded_players.iter().position(|x| *x == player) {
+                    println!("{}",index);
+                    println!("entered here");
+                    unfolded_players.remove(index);
+                    // self.unfolded_players  equivalent
+                    print_unfolded(&unfolded_players);
+
+                } else {
+                    env::panic_str("ERR: could not find the player in the list of unfolded people");
+                }
+
+                // fold the cards of the user 
+                player.fold_cards();
+                // or 
+                player.is_folded= true;
+
+               
+
+                
+            }
+            PlayerActions::Raise(raise_amount) => {
+                player.raise_amount(raise_amount);
+                //self.tokens_staked 
+                tokens_staked += raise_amount;
+            }
+            PlayerActions::Show => {
+                if unfolded_players.len() == 2 {
+                    // run winner script
+                } else {
+                    env::panic_str(
+                        "ERR:cant use the show action when more than 2 players are remaining",
+                    )
+                }
+            }
+        }
     }
-
-    // #[test] //three of a kind
-    // pub fn check_for_trail() {
-    //     let cards = Deck::new().generate_hand();
-
-    //     if cards[0].value == cards[1].value
-    //         && cards[0].value == cards[2].value
-    //         && cards[1].value == cards[2].value
-    //     {
-    //         assert!(true, "This is trail")
-    //     } else {
-    //         assert!(false, "not trail");
-    //     }
-    // }
-
-    // #[test]
-    // pub fn check_for_pair() {
-    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
-
-    //     if cards[0].value == cards[1].value && cards[1].value != cards[2].value {
-    //         println!("true");
-    //     } else if cards[1].value == cards[2].value && cards[1].value != cards[0].value {
-    //         println!("true");
-    //     } else if cards[0].value == cards[2].value && cards[0].value != cards[1].value {
-    //         println!("true");
-    //     } else {
-    //         println!("false");
-    //     }
-    // }
-
-    // #[test]
-    // pub fn check_for_flush() {
-    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
-
-    //     // let card1 = Card {
-    //     //     card_type: "J".to_owned(),
-    //     //     suit: "Club".to_owned(),
-    //     //     value: 11,
-    //     // };
-    //     // let card2 = Card {
-    //     //     card_type: "3".to_owned(),
-    //     //     suit: "Club".to_owned(),
-    //     //     value: 11,
-    //     // };
-    //     // let card3 = Card {
-    //     //     card_type: "4".to_owned(),
-    //     //     suit: "Club".to_owned(),
-    //     //     value: 11,
-    //     // };
-
-    //     // cards.push(card1);
-    //     // cards.push(card2);
-    //     // cards.push(card3);
-
-    //     if cards[0].suit == cards[1].suit
-    //         && cards[0].suit == cards[2].suit
-    //         && cards[1].suit == cards[2].suit
-    //     {
-    //         assert!(true, "This is flush ")
-    //     } else {
-    //         assert!(false, "not flush");
-    //     }
-    // } //all cards of the same suit
-
-    // //todo SAMAY
-    // #[test]
-    // pub fn check_for_sequence() {
-    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
-
-    //     let mut cards_value: Vec<i32> = Vec::new();
-
-    //     for card in cards {
-    //         cards_value.push(card.value as i32);
-    //     }
-
-    //     cards_value.sort();
-
-    //     if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
-    //         && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
-    //     {
-    //         assert_eq!(true, "This is sequence");
-    //     } else {
-    //         assert_eq!(false, "This is not sequence");
-    //     }
-    // }
-
-    // #[test]
-    // pub fn check_for_pure_sequence() {
-    //     let mut cards: Vec<Card> = Deck::new().generate_hand();
-
-    //     let mut cards_value: Vec<i32> = Vec::new();
-
-    //     for card in cards {
-    //         cards_value.push(card.value as i32);
-    //     }
-
-    //     cards_value.sort();
-
-    //     if (cards_value.get(2).unwrap() - cards_value.get(1).unwrap() == 1)
-    //         && (cards_value.get(1).unwrap() - cards_value.get(0).unwrap() == 1)
-    //     {
-    //         if (cards[0].suit == cards[1].suit) && (cards[1].suit == cards[2].suit) {
-    //             assert_eq!(true, "This is pure sequence");
-    //         } else {
-    //             assert_eq!(false, "This is not pure sequence");
-    //         }
-    //     } else {
-    //         assert_eq!(false, "This is not pure sequence");
-    //     }
-    // }
 }
