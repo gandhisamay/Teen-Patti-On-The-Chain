@@ -85,12 +85,12 @@ impl Deck {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub enum PlayerActions {
     Idle,
     Fold,
-    Raise { raise_amount: f64 },
+    Raise(f64),
     Show, //only when two players are remaining
 }
 
@@ -136,7 +136,7 @@ pub struct Card {
     value: u16,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Hand {
     cards: Vec<Card>, //list of cards
@@ -256,7 +256,7 @@ impl Hand {
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize,Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Player {
     pub account_id: AccountId,
@@ -266,7 +266,7 @@ pub struct Player {
     pub is_folded: bool,
     pub play_blind: bool,
     pub balance_amount: f64,
-    pub player_action:PlayerActions,
+    pub player_action: PlayerActions,
 }
 
 impl Player {
@@ -281,7 +281,7 @@ impl Player {
         player_action: PlayerActions,
     ) -> Self {
         Self {
-            account_id: account_id.parse::<AccountId>().unwrap(),
+            account_id: account_id.parse::<AccountId>().expect("failed to parse account id"),
             name,
             hand: Hand { cards },
             betting_amount,
@@ -321,9 +321,7 @@ impl Player {
 
             self.betting_amount += raise_amount;
 
-            PlayerActions::Raise {
-                raise_amount: raise_amount,
-            }
+            PlayerActions::Raise(raise_amount)
         }
     }
 
@@ -333,7 +331,7 @@ impl Player {
         PlayerActions::Fold
     }
 
-    pub fn show_cards(players_remaining: u16) -> PlayerActions {
+    pub fn show_cards(&mut self, players_remaining: usize) -> PlayerActions {
         if players_remaining == 2 {
             PlayerActions::Show
         } else {
@@ -343,42 +341,84 @@ impl Player {
 }
 
 #[near_bindgen]
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(Default, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
 pub struct Game {
     pub players: Vec<Player>,
+    pub folded_players: Vec<Player>,
     pub tokens_staked: f64,
+    // pub current_turn : Player,
 }
 
 #[near_bindgen]
 impl Game {
-    // pub fn get_unfolded_players(&mut self)->Vec<Player> {
-    //     let mut not_folded_players: Vec<Player> = Vec::new();
-    //     for player in &self.players {
-    //         if !player.is_folded {
-    //             not_folded_players.push(player);
-    //         }
-    //     }
-
-    //     not_folded_players
-    // }
-
+    pub fn game_state(self) -> Game {
+        self
+    }
     pub fn get_players_data(self) -> Vec<Player> {
         self.players
     }
 
+    pub fn get_player(self, account_id: AccountId) -> Player {
+        let mut player_data: Player = Player::from(
+            String::from("harshrathi2511.testnet"),
+            String::from(""),
+            Vec::new(),
+            0.0,
+            false,
+            false,
+            100.0,
+            PlayerActions::Idle,
+        );
+
+        for player in self.players {
+            if (player.account_id == account_id) {
+                player_data = player;
+            }
+        }
+
+        player_data
+    }
+
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
         for p in input_players {
-            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false, 100.0,PlayerActions::Idle);
+            let player = Player::from(
+                p.account_id,
+                p.name,
+                Vec::new(),
+                0.0,
+                false,
+                false,
+                100.0,
+                PlayerActions::Idle,
+            );
             self.players.push(player);
             // let player1 = player.clone();
             // self.unfolded_players.push(player1);
         }
     }
 
-    pub fn start_game(&mut self) {
-        for player in &self.players {
-            let player_action = &player.player_action;
+    pub fn play(&mut self, action: PlayerActions, player: &mut Player) {
+        let player_action = &player.player_action;
 
+        match player_action {
+            PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
+            PlayerActions::Fold => {
+                player.fold();
+
+                // add in the list
+                let mut player = player.clone();
+                self.folded_players.insert(1, player);
+            }
+            PlayerActions::Raise(raise_amount) => {
+                // raise amount in the token basket
+                self.tokens_staked += raise_amount;
+            }
+            PlayerActions::Show => {
+                let len = self.players.len() - self.folded_players.len();
+                // let mut player = player.clone();
+                player.show_cards(len);
+            }
         }
     }
 
@@ -592,19 +632,6 @@ mod tests {
             }
         } else {
             assert_eq!(false, "This is not pure sequence");
-        }
-    }
-
-    #[test] //not needed
-    pub fn add_players() {
-        let mut input_players: Vec<AddPlayerInput>;
-        let mut players:Vec<Player>;
-        let mut unfolded_players:Vec<Player>;
-        for p in input_players {
-            let player = Player::from(p.account_id, p.name, Vec::new(), 0.0, false, false, 100.0);
-            players.push(player);
-            let player1 = player.clone();
-            unfolded_players.push(player1);
         }
     }
 }
