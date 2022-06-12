@@ -450,8 +450,21 @@ impl Game {
         env::log_str("getting player making the request");
         let mut player = self.get_player_by_account_id(account_id, &self.players);
 
+        // see if the player has its turn
         if current_turn_player.account_id != player.account_id {
             env::panic_str("ERR: NOT YOUR TURN");
+        }
+
+        // check if the current player has folded cards
+        if player.is_folded == true {
+            //works
+            env::panic_str("ERR: you have folded already, can't play again");
+        }
+
+        // now check for how many players have folded cards
+        if self.unfolded_players.len() <= 1 {
+            //0,1,
+            env::log_str("Congrats you are the winner");
         }
 
         match action {
@@ -459,25 +472,41 @@ impl Game {
             PlayerActions::Fold => {
                 env::log_str("Folding");
                 if let Some(index) = self.unfolded_players.iter().position(|x| *x == player) {
-                    env::log_str("entered here ");
+                    env::log_str("entered here :- folding the player");
                     self.unfolded_players.remove(index);
-                    // self.unfolded_players  equivalent
+                    self.unfolded_players[index].is_folded = true; //this will change the game state of the unfolded players
 
+                    if let Some(index) = self.players.iter().position(|x| *x == player) {
+                        env::log_str("making self.players updated");
+                        self.players[index].is_folded = true; //this will change the game state of the self.players
+                    }
+
+                    //push in the list of folded players
                     self.folded_players.push(player.clone());
+                    // update the state in the folded players list too
+                    if let Some(index) = self.folded_players.iter().position(|x| *x == player) {
+                        self.unfolded_players[index].is_folded = true; //updated state
+                    }
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
-
-                // fold the cards of the user
-                // player.fold_cards();
-                // or
-                player.is_folded = true;
             }
             PlayerActions::Raise(raise_amount) => {
-                env::log_str("raising amount");
-                player.raise_amount(raise_amount);
-                //self.tokens_staked
-                self.tokens_staked += raise_amount;
+                if let Some(index) = self.unfolded_players.iter().position(|x| *x == player) {
+                    env::log_str("raising amount");
+                    player.raise_amount(raise_amount); //just checks the balance of the player
+
+                    // updating in the players list
+                    if let Some(index) = self.players.iter().position(|x| *x == player) {
+                        self.players[index].balance_amount -= raise_amount;
+                        self.players[index].betting_amount += raise_amount;
+                    }
+
+                    //self.tokens_staked
+                    self.tokens_staked += raise_amount;
+                } else {
+                    env::panic_str("ERR: could not find the player in the list of unfolded people");
+                }
             }
             PlayerActions::Show => {
                 env::log_str("showing action");
@@ -491,6 +520,10 @@ impl Game {
                 }
             }
         }
+
+        // designate the current turn to other player in the unfolded list
+
+        
     }
 
     pub fn find_winner(&mut self) -> &Player {
