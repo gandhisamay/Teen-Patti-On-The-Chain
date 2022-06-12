@@ -43,3 +43,9 @@ echo " getting a player action"
 near call game.teenpatti.testnet play '{"action": "Fold" , "account_id": "harshrathi2511.testnet"}' --accountId harshrathi2511.testnet
 
 # better to parse the arguments through a json formatter for not getting fuckin syntax errors
+
+
+echo ""
+echo "viewing the current state of the game"
+near view game.teenpatti.testnet game_state
+echo ""

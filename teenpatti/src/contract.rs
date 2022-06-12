@@ -377,9 +377,9 @@ impl Game {
 
         player1
     }
-    pub fn get_unfolded_players(&self, player_list: &Vec<Player>) -> Vec<Player> {
+    pub fn get_unfolded_players(&self) -> Vec<Player> {
         let mut unfolded_players: Vec<Player> = Vec::new();
-        for player in player_list {
+        for player in &self.players {
             if player.is_folded == false {
                 unfolded_players.push(player.clone())
             }
@@ -434,6 +434,7 @@ impl Game {
             self.players.push(player);
             // let player1 = player.clone();
             // self.unfolded_players.push(player1);
+            self.unfolded_players = self.get_unfolded_players();
         }
     }
 
@@ -445,7 +446,7 @@ impl Game {
         // println!("{:?}", player_data);
         env::log_str("getting whose turn to play");
         let current_turn_player = &self.players[0];
-        self.unfolded_players = self.get_unfolded_players(&self.players);
+        self.unfolded_players = self.get_unfolded_players();
         env::log_str("getting player making the request");
         let mut player = self.get_player_by_account_id(account_id, &self.players);
 
@@ -461,12 +462,14 @@ impl Game {
                     env::log_str("entered here ");
                     self.unfolded_players.remove(index);
                     // self.unfolded_players  equivalent
+
+                    self.folded_players.push(player.clone());
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
 
                 // fold the cards of the user
-                player.fold_cards();
+                // player.fold_cards();
                 // or
                 player.is_folded = true;
             }
