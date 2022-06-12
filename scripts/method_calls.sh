@@ -35,3 +35,11 @@ near call game.teenpatti.testnet get_player  '{
     "account_id" : "harshrathi2511.testnet"
 }' --accountId teenpatti.testnet
 
+
+
+echo ""
+echo ""
+echo " getting a player action"
+near call game.teenpatti.testnet play '{"action": "Fold" , "account_id": "harshrathi2511.testnet"}' --accountId harshrathi2511.testnet
+
+# better to parse the arguments through a json formatter for not getting fuckin syntax errors

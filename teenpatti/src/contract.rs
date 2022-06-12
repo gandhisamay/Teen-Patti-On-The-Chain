@@ -343,7 +343,7 @@ pub struct Game {
     pub players: Vec<Player>,
     pub folded_players: Vec<Player>,
     pub tokens_staked: f64,
-    // pub current_turn : Player,
+    pub unfolded_players: Vec<Player>,
 }
 
 #[near_bindgen]
@@ -377,7 +377,7 @@ impl Game {
 
         player1
     }
-    pub fn get_unfolded_players(&self,player_list: &Vec<Player>) -> Vec<Player> {
+    pub fn get_unfolded_players(&self, player_list: &Vec<Player>) -> Vec<Player> {
         let mut unfolded_players: Vec<Player> = Vec::new();
         for player in player_list {
             if player.is_folded == false {
@@ -387,13 +387,18 @@ impl Game {
         unfolded_players
     }
 
-    pub fn get_player_by_account_id(&self,account_id: AccountId, player_list: &Vec<Player>) -> Player {
+    pub fn get_player_by_account_id(
+        &self,
+        account_id: AccountId,
+        player_list: &Vec<Player>,
+    ) -> Player {
         for player in player_list {
             if player.account_id == account_id {
+                env::log_str("found the account id");
                 return player.clone();
             }
         }
-
+        env::log_str("ERR: get_player_by_account_id: did not find player with account id");
         let player1 = Player {
             account_id: "dummy.testnet"
                 .parse::<AccountId>()
@@ -408,7 +413,7 @@ impl Game {
         player1
     }
 
-    pub fn print_unfolded(&self,unfolded_list: &Vec<Player>) {
+    pub fn print_unfolded(&self, unfolded_list: &Vec<Player>) {
         for player in unfolded_list {
             println!("{:?}", player);
         }
@@ -432,17 +437,17 @@ impl Game {
         }
     }
 
-    pub fn play(&mut self, action: PlayerActions, player: &mut Player) {
-        let account_id = "harshrathi2511.testnet"
-            .parse::<AccountId>()
-            .expect("failed to parse account id");
+    pub fn play(&mut self, action: PlayerActions, account_id: AccountId) {
+        // let account_id = "harshrathi2511.testnet"
+        //     .parse::<AccountId>()
+        //     .expect("failed to parse account id");
 
         // println!("{:?}", player_data);
-        let action = PlayerActions::Fold;
+        env::log_str("getting whose turn to play");
         let current_turn_player = &self.players[0];
-        let  mut unfolded_players = self.get_unfolded_players(&self.players);
+        self.unfolded_players = self.get_unfolded_players(&self.players);
+        env::log_str("getting player making the request");
         let mut player = self.get_player_by_account_id(account_id, &self.players);
-        let mut tokens_staked = 0.0;
 
         if current_turn_player.account_id != player.account_id {
             env::panic_str("ERR: NOT YOUR TURN");
@@ -451,15 +456,11 @@ impl Game {
         match action {
             PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
             PlayerActions::Fold => {
-                self.print_unfolded(&unfolded_players);
-
-                println!("FOLDING");
-                if let Some(index) = unfolded_players.iter().position(|x| *x == player) {
-                    println!("{}", index);
-                    println!("entered here");
-                    unfolded_players.remove(index);
+                env::log_str("Folding");
+                if let Some(index) = self.unfolded_players.iter().position(|x| *x == player) {
+                    env::log_str("entered here ");
+                    self.unfolded_players.remove(index);
                     // self.unfolded_players  equivalent
-                    self.print_unfolded(&unfolded_players);
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
@@ -470,13 +471,16 @@ impl Game {
                 player.is_folded = true;
             }
             PlayerActions::Raise(raise_amount) => {
+                env::log_str("raising amount");
                 player.raise_amount(raise_amount);
                 //self.tokens_staked
-                tokens_staked += raise_amount;
+                self.tokens_staked += raise_amount;
             }
             PlayerActions::Show => {
-                if unfolded_players.len() == 2 {
+                env::log_str("showing action");
+                if self.unfolded_players.len() == 2 {
                     // run winner script
+                    env::log_str("should run winner script");
                 } else {
                     env::panic_str(
                         "ERR:cant use the show action when more than 2 players are remaining",
