@@ -377,7 +377,7 @@ impl Game {
 
         player1
     }
-    pub fn get_unfolded_players(player_list: &Vec<Player>) -> Vec<Player> {
+    pub fn get_unfolded_players(&self,player_list: &Vec<Player>) -> Vec<Player> {
         let mut unfolded_players: Vec<Player> = Vec::new();
         for player in player_list {
             if player.is_folded == false {
@@ -387,7 +387,7 @@ impl Game {
         unfolded_players
     }
 
-    pub fn get_player_by_account_id(account_id: AccountId, player_list: &Vec<Player>) -> Player {
+    pub fn get_player_by_account_id(&self,account_id: AccountId, player_list: &Vec<Player>) -> Player {
         for player in player_list {
             if player.account_id == account_id {
                 return player.clone();
@@ -408,7 +408,7 @@ impl Game {
         player1
     }
 
-    pub fn print_unfolded(unfolded_list: &Vec<Player>) {
+    pub fn print_unfolded(&self,unfolded_list: &Vec<Player>) {
         for player in unfolded_list {
             println!("{:?}", player);
         }
@@ -440,8 +440,8 @@ impl Game {
         // println!("{:?}", player_data);
         let action = PlayerActions::Fold;
         let current_turn_player = &self.players[0];
-        let mut unfolded_players = get_unfolded_players(&player_list);
-        let mut player = get_player_by_account_id(account_id, &player_list);
+        let  mut unfolded_players = self.get_unfolded_players(&self.players);
+        let mut player = self.get_player_by_account_id(account_id, &self.players);
         let mut tokens_staked = 0.0;
 
         if current_turn_player.account_id != player.account_id {
@@ -451,7 +451,7 @@ impl Game {
         match action {
             PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
             PlayerActions::Fold => {
-                print_unfolded(&unfolded_players);
+                self.print_unfolded(&unfolded_players);
 
                 println!("FOLDING");
                 if let Some(index) = unfolded_players.iter().position(|x| *x == player) {
@@ -459,7 +459,7 @@ impl Game {
                     println!("entered here");
                     unfolded_players.remove(index);
                     // self.unfolded_players  equivalent
-                    print_unfolded(&unfolded_players);
+                    self.print_unfolded(&unfolded_players);
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
