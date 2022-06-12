@@ -2,4 +2,16 @@ betting
 taking initial money
 giving final money to everyone (Wallet)
     
+plaeyrs 
+p1   p2   p3   p4   indeix =3 , unfolded len = 3 
+t
 
+
+unfolded 
+
+p1  p2   p3   p4    (len-1  = 3 , index max = 3 )
+t   
+
+raise :- unfolded same , next person
+
+fold :- jo fold hua vahi index would be the current player 

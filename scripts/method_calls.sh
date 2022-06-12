@@ -14,7 +14,11 @@ near call game.teenpatti.testnet add_players '{
         {
             "account_id": "samay200.testnet",
             "name": "Samay Gandhi"
-        }
+        },
+        {
+            "account_id": "sonali.testnet",
+            "name": "Sonali"
+        },
     ] 
 }' --accountId teenpatti.testnet
 

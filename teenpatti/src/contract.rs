@@ -337,13 +337,14 @@ impl Player {
 }
 
 #[near_bindgen]
-#[derive(Default, BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize,Default)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Game {
     pub players: Vec<Player>,
     pub folded_players: Vec<Player>,
     pub tokens_staked: f64,
     pub unfolded_players: Vec<Player>,
+    // pub current_turn_player: Vec<Player>,
 }
 
 #[near_bindgen]
@@ -432,21 +433,22 @@ impl Game {
                 // PlayerActions::Idle,
             );
             self.players.push(player);
-            // let player1 = player.clone();
-            // self.unfolded_players.push(player1);
+
+            // set the unfolded list for the game
             self.unfolded_players = self.get_unfolded_players();
+
+            // set the current turn for the player
+            // self.current_turn_player = self.players[0].clone();
         }
     }
 
     pub fn play(&mut self, action: PlayerActions, account_id: AccountId) {
-        // let account_id = "harshrathi2511.testnet"
-        //     .parse::<AccountId>()
-        //     .expect("failed to parse account id");
-
-        // println!("{:?}", player_data);
         env::log_str("getting whose turn to play");
         let current_turn_player = &self.players[0];
+
+        //set the unfolded players
         self.unfolded_players = self.get_unfolded_players();
+
         env::log_str("getting player making the request");
         let mut player = self.get_player_by_account_id(account_id, &self.players);
 
@@ -487,6 +489,15 @@ impl Game {
                     if let Some(index) = self.folded_players.iter().position(|x| *x == player) {
                         self.unfolded_players[index].is_folded = true; //updated state
                     }
+
+                    //set the current player to the new player
+                    // if index == self.unfolded_players.len() {
+                    //     //current turn is now of the first player
+                    //     self.current_turn_player = self.unfolded_players[0].clone();
+                    // } else {
+                    //     //normal case where index player is now the current player as list popped left
+                    //     self.current_turn_player = self.unfolded_players[index].clone();
+                    // }
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
@@ -504,6 +515,17 @@ impl Game {
 
                     //self.tokens_staked
                     self.tokens_staked += raise_amount;
+
+                    // set the turn to the next player in the index if it exists
+                    // if index < self.unfolded_players.len() - 1 {
+                    //     //eg p1 raises but 3 players are there
+                    //     self.current_turn_player = self.unfolded_players[index + 1].clone();
+                    // } else {
+                    //     //when index is equal to the len of the unfolded players
+                    //     // index = self.unfolded_players.len()-1
+                    //     // p3 raises when 3 players there
+                    //     self.current_turn_player = self.unfolded_players[0].clone();
+                    // }
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
@@ -522,8 +544,6 @@ impl Game {
         }
 
         // designate the current turn to other player in the unfolded list
-
-        
     }
 
     pub fn find_winner(&mut self) -> &Player {
