@@ -1,8 +1,8 @@
 use std::io::{self, Write};
 use text_io::read;
 use std::fs::File;
-use library::Card;
-use library::Deck;
+use library::card::Card;
+use library::deck::Deck;
 use rand;
 use rand::seq::SliceRandom;
 use std::process::Command;
