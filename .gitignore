@@ -4,3 +4,4 @@ delete.sh
 deploy.sh
 add_players.sh
 test.sh
+play.sh

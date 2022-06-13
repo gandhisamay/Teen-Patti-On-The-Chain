@@ -5,6 +5,7 @@ use library::Card;
 use library::Deck;
 use rand;
 use rand::seq::SliceRandom;
+use std::process::Command;
 
 fn main() -> std::io::Result<()>{
     let mut file = File::create("add_players.sh")?;
@@ -45,6 +46,8 @@ fn main() -> std::io::Result<()>{
     }
 
     file.write_all("  ]\n}' --accountId teen_patti2.testnet".as_bytes()).unwrap();
+
+    Command::new("bash").arg("add_players.sh").current_dir("/home/samaygandhi/Teen-Patti-On-The-Chain").spawn().unwrap();
 
     Ok(())
 

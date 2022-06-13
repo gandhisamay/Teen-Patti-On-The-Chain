@@ -466,8 +466,8 @@ impl Game {
                 env::log_str("Folding");
                 if let Some(index) = self.unfolded_players.iter().position(|x| *x == player) {
                     env::log_str("entered here :- folding the player");
-                    self.unfolded_players.remove(index);
-                    self.unfolded_players[index].is_folded = true; //this will change the game state of the unfolded players
+                    // self.unfolded_players[index].is_folded = true; 
+                    self.unfolded_players.remove(index);//this will change the game state of the unfolded players
 
                     if let Some(index) = self.players.iter().position(|x| *x == player) {
                         env::log_str("making self.players updated");
@@ -478,7 +478,7 @@ impl Game {
                     self.folded_players.push(player.clone());
                     // update the state in the folded players list too
                     if let Some(index) = self.folded_players.iter().position(|x| *x == player) {
-                        self.unfolded_players[index].is_folded = true; //updated state
+                        self.folded_players[index].is_folded = true; //updated state
                     }
 
                     //set the current player to the new player
