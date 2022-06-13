@@ -444,7 +444,7 @@ impl Game {
 
     pub fn play(&mut self, action: PlayerActions, account_id: AccountId) {
         env::log_str("getting whose turn to play");
-        let current_turn_player = &self.players[0];
+        // let current_turn_player = &self.players[0];
 
         //set the unfolded players
         self.unfolded_players = self.get_unfolded_players();
@@ -453,9 +453,9 @@ impl Game {
         let mut player = self.get_player_by_account_id(account_id, &self.players);
 
         // see if the player has its turn
-        if current_turn_player.account_id != player.account_id {
-            env::panic_str("ERR: NOT YOUR TURN");
-        }
+        // if current_turn_player.account_id != player.account_id {
+        //     env::panic_str("ERR: NOT YOUR TURN");
+        // }
 
         // check if the current player has folded cards
         if player.is_folded == true {
