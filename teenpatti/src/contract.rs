@@ -4,6 +4,7 @@ use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{env, near_bindgen, AccountId, Promise};
 use std::convert::From;
 use std::convert::Into;
+use text_io::read;
 
 // 5 Ⓝ in yoctoNEAR
 const INITIAL_BET: u128 = 5_000_000_000_000_000_000_000_000;
@@ -337,7 +338,7 @@ impl Player {
 }
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize,Default)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Default)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Game {
     pub players: Vec<Player>,
@@ -422,7 +423,7 @@ impl Game {
 
     pub fn add_players(&mut self, input_players: Vec<AddPlayerInput>) {
         for p in input_players {
-            let player = Player::from(p.account_id, p.name, p.cards, 0.0, false, false, 0.0);
+            let player = Player::from(p.account_id, p.name, p.cards, 0.0, false, false, 500.0);
             self.players.push(player);
 
             // set the unfolded list for the game
@@ -454,22 +455,14 @@ impl Game {
             env::panic_str("ERR: you have folded already, can't play again");
         }
 
-        // now check for how many players have folded cards
-        if self.unfolded_players.len() == 1 {
-            env::log_str("Winner");
-            env::log_str(&self.unfolded_players.get(0).unwrap().name);
-            //0,1,
-            env::log_str("Congrats you are the winner");
-        }
-
         match action {
             PlayerActions::Idle => env::log_str("ERR:PLAYER IDLE "),
             PlayerActions::Fold => {
                 env::log_str("Folding");
                 if let Some(index) = self.unfolded_players.iter().position(|x| *x == player) {
                     env::log_str("entered here :- folding the player");
-                    // self.unfolded_players[index].is_folded = true; 
-                    self.unfolded_players.remove(index);//this will change the game state of the unfolded players
+                    // self.unfolded_players[index].is_folded = true;
+                    self.unfolded_players.remove(index); //this will change the game state of the unfolded players
 
                     if let Some(index) = self.players.iter().position(|x| *x == player) {
                         env::log_str("making self.players updated");
@@ -481,6 +474,13 @@ impl Game {
                     // update the state in the folded players list too
                     if let Some(index) = self.folded_players.iter().position(|x| *x == player) {
                         self.folded_players[index].is_folded = true; //updated state
+                    }
+
+                    if self.unfolded_players.len() == 1 {
+                        env::log_str("Winner");
+                        env::log_str(&self.unfolded_players.get(0).unwrap().name);
+                        //0,1,
+                        env::log_str("Congrats you are the winner");
                     }
 
                     //set the current player to the new player
@@ -496,15 +496,26 @@ impl Game {
                 }
             }
             PlayerActions::Raise(raise_amount) => {
-                if let Some(index) = self.unfolded_players.iter().position(|x| *x == player) {
+                // let val : f64 = read!();
+                env::log_str("Raise is called");
+                if let Some(indice) = self.unfolded_players.iter().position(|x| *x == player) {
                     env::log_str("raising amount");
                     player.raise_amount(raise_amount); //just checks the balance of the player
 
                     // updating in the players list
-                    if let Some(index) = self.players.iter().position(|x| *x == player) {
-                        self.players[index].balance_amount -= raise_amount;
-                        self.players[index].betting_amount += raise_amount;
+                    let iters = self.players.iter_mut();
+
+                    for p in iters {
+                        if p.account_id == self.unfolded_players.get(indice).unwrap().account_id {
+                            env::log_str("Player Index");
+                            env::log_str(&raise_amount.to_string());
+                            p.balance_amount -= raise_amount;
+                            p.betting_amount += raise_amount;
+                        }
                     }
+
+                    self.unfolded_players.get_mut(indice).expect("Player not found").balance_amount -= raise_amount;
+                    self.unfolded_players.get_mut(indice).expect("Player not found").betting_amount += raise_amount;
 
                     //self.tokens_staked
                     self.tokens_staked += raise_amount;
@@ -585,7 +596,7 @@ impl Game {
 pub struct AddPlayerInput {
     pub account_id: String,
     pub name: String,
-    pub cards: Vec<Card>
+    pub cards: Vec<Card>,
 }
 
 // use the attribute below for unit tests
