@@ -455,7 +455,9 @@ impl Game {
         }
 
         // now check for how many players have folded cards
-        if self.unfolded_players.len() <= 1 {
+        if self.unfolded_players.len() == 1 {
+            env::log_str("Winner");
+            env::log_str(&self.unfolded_players.get(0).unwrap().name);
             //0,1,
             env::log_str("Congrats you are the winner");
         }
@@ -524,8 +526,10 @@ impl Game {
             PlayerActions::Show => {
                 env::log_str("showing action");
                 if self.unfolded_players.len() == 2 {
-                    // run winner script
-                    env::log_str("should run winner script");
+                    let player: &Player = self.find_winner();
+                    env::log_str("Winner");
+                    env::log_str(&player.name);
+                    // env::log_str("should run winner script");
                 } else {
                     env::panic_str(
                         "ERR:cant use the show action when more than 2 players are remaining",
@@ -756,7 +760,6 @@ mod tests {
             }
             PlayerActions::Show => {
                 if unfolded_players.len() == 2 {
-                    // run winner script
                 } else {
                     env::panic_str(
                         "ERR:cant use the show action when more than 2 players are remaining",
