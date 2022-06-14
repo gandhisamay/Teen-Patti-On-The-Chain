@@ -1,7 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env, near_bindgen, AccountId, Promise};
 use crate::card::Card;
 use crate::constants::*;
 
@@ -36,39 +35,5 @@ impl Deck {
             }
         }
         Deck { cards: cards }
-    }
-
-    // generates hand for one player
-    pub fn generate_hand(&self) -> Vec<Card> {
-        // let cards:Vec<Card> = Vec::new();
-        // let hand: Vec<Card> = self
-        //     .cards
-        //     .choose_multiple(&mut rand::thread_rng(), 3)
-        //     .cloned()
-        //     .collect();
-
-        let mut hand: Vec<Card> = Vec::new();
-
-        let card1 = Card {
-            card_type: "J".to_owned(),
-            suit: "Club".to_owned(),
-            value: 11,
-        };
-        let card2 = Card {
-            card_type: "3".to_owned(),
-            suit: "Club".to_owned(),
-            value: 11,
-        };
-        let card3 = Card {
-            card_type: "4".to_owned(),
-            suit: "Club".to_owned(),
-            value: 11,
-        };
-
-        hand.push(card1);
-        hand.push(card2);
-        hand.push(card3);
-        // Chooses amount elements from the slice at random, without repetition, and in random order.
-        hand
     }
 }

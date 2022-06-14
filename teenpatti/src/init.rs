@@ -27,7 +27,7 @@ fn main() -> std::io::Result<()>{
         println!("Player Name.");
         let name : String = read!();
 
-        let mut string = String::new();
+        let mut message = String::new();
 
         let cards = generate_cards();
 
@@ -36,13 +36,13 @@ fn main() -> std::io::Result<()>{
         let card3_string = generate_card_string(cards.get(2).expect("Expected a card at index 2"), true);
 
         if i+1 != num {
-            string = format!("    {{\n      \"account_id\": \"{account_id}\",\n      \"name\": \"{name}\",\n      \"cards\": [\n{card1_string}{card2_string}{card3_string}      ]\n    }},\n");
+            message = format!("    {{\n      \"account_id\": \"{account_id}\",\n      \"name\": \"{name}\",\n      \"cards\": [\n{card1_string}{card2_string}{card3_string}      ]\n    }},\n");
         }
         else{
-            string = format!("    {{\n      \"account_id\": \"{account_id}\",\n      \"name\": \"{name}\",\n      \"cards\": [\n{card1_string}{card2_string}{card3_string}      ]\n    }}\n");
+            message = format!("    {{\n      \"account_id\": \"{account_id}\",\n      \"name\": \"{name}\",\n      \"cards\": [\n{card1_string}{card2_string}{card3_string}      ]\n    }}\n");
         }
         println!();
-        file.write_all(string.as_bytes()).unwrap();
+        file.write_all(message.as_bytes()).unwrap();
     }
 
     file.write_all("  ]\n}' --accountId teen_patti2.testnet".as_bytes()).unwrap();
@@ -58,12 +58,12 @@ pub fn generate_card_string(card: &Card, last_card: bool) -> String{
     let suit  = &card.suit;
     let value = card.value;
     if last_card{
-        let string = format!("        {{\n          \"card_type\": \"{card_type}\",\n          \"suit\": \"{suit}\",\n          \"value\": {value}    \n        }}\n");
-        string
+        let message = format!("        {{\n          \"card_type\": \"{card_type}\",\n          \"suit\": \"{suit}\",\n          \"value\": {value}    \n        }}\n");
+        message
     }
     else{
-        let string = format!("        {{\n          \"card_type\": \"{card_type}\",\n          \"suit\": \"{suit}\",\n          \"value\": {value}    \n        }},\n");
-        string
+        let message = format!("        {{\n          \"card_type\": \"{card_type}\",\n          \"suit\": \"{suit}\",\n          \"value\": {value}    \n        }},\n");
+        message
     }
 }
 

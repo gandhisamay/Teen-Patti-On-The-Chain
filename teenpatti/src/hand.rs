@@ -1,10 +1,7 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env, near_bindgen, AccountId, Promise};
 use crate::card::Card;
-use crate::handtype::HandType;
-use crate::deck::Deck;
+use crate::hand_type::HandType;
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(crate = "near_sdk::serde")]
@@ -66,11 +63,11 @@ impl Hand {
     }
 
     pub fn check_for_pure_sequence(&self) -> bool {
-        let cards: Vec<Card> = Deck::new().generate_hand();
+        let cards = &self.cards;
 
         let mut cards_value: Vec<i32> = Vec::new();
 
-        for card in &cards {
+        for card in cards {
             cards_value.push(card.value as i32);
         }
 
@@ -90,7 +87,7 @@ impl Hand {
     }
 
     pub fn check_for_sequence(&self) -> bool {
-        let cards: Vec<Card> = Deck::new().generate_hand();
+        let cards = &self.cards;
 
         let mut cards_value: Vec<i32> = Vec::new();
 

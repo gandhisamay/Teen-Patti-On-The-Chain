@@ -1,12 +1,9 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LookupMap;
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env, near_bindgen, AccountId, Promise};
-use std::convert::From;
-use std::convert::Into;
+use near_sdk::{env, AccountId};
 use crate::hand::Hand;
 use crate::card::Card;
-use crate::playeractions::PlayerActions;
+use crate::player_actions::PlayerActions;
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(crate = "near_sdk::serde")]
@@ -48,21 +45,6 @@ impl Player {
 
     pub fn fold_cards(&mut self) {
         self.is_folded = true;
-    }
-
-    pub fn deposit_init_collateral(mut self) {
-        // doesnt check if the account id is valid or not
-        let player_account_id: AccountId = self.account_id;
-
-        //   the master account for the teenpatti host
-        let teenpatti_master_acc_id: AccountId = "teenpatti.testnet"
-            .parse::<AccountId>()
-            .expect("teenpatti.testnet account doesnt exist");
-
-        // transfer the collateral amount
-        // todo
-
-        // hardcoded
     }
 
     // performs basic validation and returns the enum along with the amount, where the main logic is handled
