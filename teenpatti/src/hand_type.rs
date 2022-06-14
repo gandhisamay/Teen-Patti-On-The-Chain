@@ -21,7 +21,7 @@ impl From<HandType> for i32 {
             HandType::Sequence => 3,
             HandType::Flush => 4,
             HandType::Pair => 5,
-            HandType::HighCard => 5,
+            HandType::HighCard => 6,
         }
     }
 }

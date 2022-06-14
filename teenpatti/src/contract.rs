@@ -216,7 +216,15 @@ impl Game {
 
                     for p in iters {
                         if p.account_id == player.account_id {
-                            p.balance_amount -= self.tokens_staked;
+                            p.balance_amount += self.tokens_staked;
+                        }
+                    }
+
+                    let iters2 = self.unfolded_players.iter_mut();
+
+                    for p in iters2 {
+                        if p.account_id == player.account_id {
+                            p.balance_amount += self.tokens_staked;
                         }
                     }
 
@@ -254,6 +262,13 @@ impl Game {
 
         let val1: i32 = player1.hand.get_players_hand_type().into();
         let val2: i32 = player2.hand.get_players_hand_type().into();
+
+        env::log_str("Into values");
+        env::log_str(&val1.to_string());
+        env::log_str(&val2.to_string());
+
+        dbg!(val1);
+        dbg!(val2);
 
         if val1 < val2 {
             player1
