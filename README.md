@@ -190,7 +190,11 @@ near call <contract-account> play
  ```
  
  ### Game Winner
- Whenever the winner of game is found it is declared using the logs when the last feasible action is performed!
+ Whenever the winner of game is found it is declared in the logs when either one of the 2 actions are performed :- 
+ 1. Only one player is left with unfolded cards and rest of the players jave folded theirs 
+ 2. When only 2 players remain with unfolded cards and a player calls "show" , then the winner is decided upon the hierarchy of their cards 
+
+All the tokens staked in the game is then transferred to the winner instantly !
  
  ## Get more info
 
