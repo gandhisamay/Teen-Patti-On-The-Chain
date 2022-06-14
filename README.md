@@ -31,18 +31,18 @@ Everywhere replace,<br>
 ## Game Play
 
 ### Start game
-To start the game, run the following command, after successful compilation of the files, the game will start and it will start with asking for playing details and once the details are filled all the player data will be pushed on the NEAR blockchain. 
+To start the game, run the following command, after successful compilation of the files it will start by asking for player details and once the details are filled all the details will be pushed on the NEAR blockchain. 
 ```
 cargo run --bin init
 ```
 Now to further play game follow the actions given below.
 
 ### Game State
-To to find information like 
-1) All registered players info
-2) Total staked tokens info
-3) Currently folded players info
-4) Players currently in the game info 
+To to find information about 
+1) All registered players 
+2) Total staked tokens in the game by all players (i.e the pot )
+3) Currently folded players 
+4) Players currently in the game  
 
 **Run**
 ```
