@@ -1,4 +1,4 @@
-# Decentralized Teen Patti (based on the NEAR Protocol)
+# Decentralized Teen Patti (NEAR Protocol)
 Teenpatti is an Indian origin card game. The objective of this game is to make the best 3 card hand as per the hand ranking and to maximize the pot (prize pool) before the showdown for you to win. A standard 52-card pack (without the jokers) is used in this game.
 
 ## Rules of the game
@@ -191,7 +191,8 @@ near call <contract-account> play
  ### Game Winner
  Whenever the winner of game is found it is declared using the logs when the last feasible action is performed!
  
- **Get more info at:**
+ ## Get more info
 
 * [Rust Smart Contract Quick Start](https://docs.near.org/docs/develop/contracts/rust/intro)
 * [Rust SDK Book](https://www.near-sdk.io/)
+* [NEAR SDK Docs](https://www.near-sdk.io/)
