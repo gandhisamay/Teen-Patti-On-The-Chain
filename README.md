@@ -28,7 +28,6 @@ Everywhere replace,<br>
     `<accountId>` by your NEAR testnet account <br>
     `<contract-account>` by the NEAR sub-account created where the game is deployed.
 
-
 ## Game Play
 
 ### Start game
@@ -36,6 +35,8 @@ To start the game, run the following command, after successful compilation of th
 ```
 cargo run --bin init
 ```
+Now to further play game follow the actions given below.
+
 ### Game State
 To to find information like 
 1) All registered players info
