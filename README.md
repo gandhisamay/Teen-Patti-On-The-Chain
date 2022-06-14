@@ -196,3 +196,6 @@ near call <contract-account> play
 * [Rust Smart Contract Quick Start](https://docs.near.org/docs/develop/contracts/rust/intro)
 * [Rust SDK Book](https://www.near-sdk.io/)
 * [NEAR SDK Docs](https://www.near-sdk.io/)
+
+## Contributors
+Made with 💖 by Web3 enthusiasts, [Samay Gandhi](https://www.github.com/gandhisamay) and [Harsh Rathi](https://github.com/harshRathi2511)
