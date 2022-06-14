@@ -40,7 +40,7 @@ Now to further play game follow the actions given below.
 ### Game State
 To to find information about 
 1) All registered players 
-2) Total staked tokens in the game by all players (i.e the pot )
+2) Total staked tokens in the game by all players (i.e the pot)
 3) Currently folded players 
 4) Players currently in the game  
 
