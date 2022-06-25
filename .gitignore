@@ -5,3 +5,4 @@ deploy.sh
 add_players.sh
 test.sh
 play.sh
+game_state.sh
