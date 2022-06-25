@@ -1,1 +1,0 @@
-near view gaming.teen_patti2.testnet game_state
