@@ -69,3 +69,20 @@ impl Player {
         }
     }
 }
+
+impl Default for Player{
+    fn default() -> Self{
+        Player{
+            account_id: "dummy.testnet".parse::<AccountId>().unwrap(),
+            balance_amount: 500.0,
+            betting_amount: 0.0,
+            hand: Hand{
+                cards: Vec::new(),
+            },
+            is_folded: false,
+            name: "dummy".to_string(),
+            play_blind: false,
+             
+        }
+    }
+}

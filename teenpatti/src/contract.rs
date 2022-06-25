@@ -17,7 +17,7 @@ pub struct Game {
     pub folded_players: Vec<Player>,
     pub tokens_staked: f64,
     pub unfolded_players: Vec<Player>,
-    // pub current_turn_player: Vec<Player>,
+    pub current_turn_player: Player,
 }
 
 #[near_bindgen]
@@ -102,13 +102,16 @@ impl Game {
             self.unfolded_players = self.get_unfolded_players();
 
             // set the current turn for the player
-            // self.current_turn_player = self.players[0].clone();
+            self.current_turn_player = self.players[0].clone();
         }
     }
 
     pub fn play(&mut self, action: PlayerActions, account_id: AccountId) {
+        env::log_str(&env::predecessor_account_id().to_string());
+        env::log_str(&env::current_account_id().to_string());
+        env::log_str(&env::signer_account_id().to_string());
+
         env::log_str("getting whose turn to play");
-        // let current_turn_player = &self.players[0];
 
         //set the unfolded players
         self.unfolded_players = self.get_unfolded_players();
@@ -116,10 +119,15 @@ impl Game {
         env::log_str("getting player making the request");
         let mut player = self.get_player_by_account_id(account_id, &self.players);
 
+        if env::signer_account_id() != player.account_id{
+            env::log_str("Cannot play someone else's turn with your account");
+            env::panic_str("ERR: Signer account id is not equal to the player account id");
+        }
+
         // see if the player has its turn
-        // if current_turn_player.account_id != player.account_id {
-        //     env::panic_str("ERR: NOT YOUR TURN");
-        // }
+        if self.current_turn_player.account_id != player.account_id {
+            env::panic_str("ERR: NOT YOUR TURN");
+        }
 
         // check if the current player has folded cards
         if player.is_folded == true {
@@ -152,17 +160,17 @@ impl Game {
                         env::log_str("Winner");
                         env::log_str(&self.unfolded_players.get(0).unwrap().name);
                         //0,1,
-                        env::log_str("Congrats you are the winner");
+                        env::log_str("Congrats you are the winner, because you are the only player left");
                     }
 
                     //set the current player to the new player
-                    // if index == self.unfolded_players.len() {
-                    //     //current turn is now of the first player
-                    //     self.current_turn_player = self.unfolded_players[0].clone();
-                    // } else {
-                    //     //normal case where index player is now the current player as list popped left
-                    //     self.current_turn_player = self.unfolded_players[index].clone();
-                    // }
+                    if index == self.unfolded_players.len() {
+                        //current turn is now of the first player
+                        self.current_turn_player = self.unfolded_players[0].clone();
+                    } else {
+                        //normal case where index player is now the current player as list popped left
+                        self.current_turn_player = self.unfolded_players[index].clone();
+                    }
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
@@ -193,15 +201,15 @@ impl Game {
                     self.tokens_staked += raise_amount;
 
                     // set the turn to the next player in the index if it exists
-                    // if index < self.unfolded_players.len() - 1 {
-                    //     //eg p1 raises but 3 players are there
-                    //     self.current_turn_player = self.unfolded_players[index + 1].clone();
-                    // } else {
-                    //     //when index is equal to the len of the unfolded players
-                    //     // index = self.unfolded_players.len()-1
-                    //     // p3 raises when 3 players there
-                    //     self.current_turn_player = self.unfolded_players[0].clone();
-                    // }
+                    if indice < self.unfolded_players.len() - 1 {
+                        //eg p1 raises but 3 players are there
+                        self.current_turn_player = self.unfolded_players[indice + 1].clone();
+                    } else {
+                        //when index is equal to the len of the unfolded players
+                        // indice = self.unfolded_players.len()-1;
+                        // p3 raises when 3 players there
+                        self.current_turn_player = self.unfolded_players[0].clone();
+                    }
                 } else {
                     env::panic_str("ERR: could not find the player in the list of unfolded people");
                 }
@@ -229,6 +237,13 @@ impl Game {
                     }
 
                     env::log_str(&player.name);
+                    let mut winnerMessage = String::new();
+                    let name = player.name;
+                    let hand_type = player.hand.get_players_hand_type().to_string();
+
+                    winnerMessage = format!("Congratulations the winner is {name}, due to hand type {hand_type}");
+
+                    env::log_str(&winnerMessage);
                     // env::log_str("should run winner script");
                 } else {
                     env::panic_str(

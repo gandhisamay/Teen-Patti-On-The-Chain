@@ -1,5 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
@@ -23,5 +24,20 @@ impl From<HandType> for i32 {
             HandType::Pair => 5,
             HandType::HighCard => 6,
         }
+    }
+}
+
+impl Display for HandType{
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result{
+        let message = match self{
+            HandType::Trail => "Hand Type Trail".to_string(),
+            HandType::PureSequence => "Hand Type Pure Sequence".to_string(),
+            HandType::Sequence => "Hand Type Sequence".to_string(),
+            HandType::Flush => "Hand Type Flush".to_string(),
+            HandType::Pair => "Hand Type Pair".to_string(),
+            HandType::HighCard => "Hand Type High Card".to_string(),
+        };
+
+        write!(f, "{}", message)
     }
 }
