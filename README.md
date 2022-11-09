@@ -1,6 +1,20 @@
 # Decentralized Teen Patti (NEAR Protocol)
 Teenpatti is an Indian origin card game. The objective of this game is to make the best 3 card hand as per the hand ranking and to maximize the pot (prize pool) before the showdown for you to win. A standard 52-card pack (without the jokers) is used in this game.
 
+## Problem Statement
+Online card games like Rummy,TeenPatti are huge in India,attracting numerous masses and involving real money. But there are many problems in this sector namely :- 
+### Accessibility and confidentiality
+
+Businesses in the gaming industry offer crypto casino customers who use cryptocurrencies as an alternative to fiat money or a solid solution as their principal payment method. Players actively wagering on the platform can do so without providing identifying documentation. Additionally, there aren’t many restrictions on new participants entering the market with cryptocurrency. As a result, new players in the lottery system are exempted from the regulations that apply to traditional lotteries.
+
+### Traceability
+
+By utilizing the transparency feature built into blockchain technology, participants of the DeFi lottery platforms can access open records and examine all the historical information of trades. If any cyber attack occurs, participants can use the transparency function of a DeFi lottery platform to track and analyze it.
+
+### Making Crypto Payments feasible
+
+Participants can use their cryptos to subscribe for the use of the Defi lottery systems. Players on the DeFi lottery platform won’t have to be confined to their national borders thanks to the crypto payment system, which enables them to participate in events regulated outside their own countries. Since cryptocurrencies make payments and redemptions cheaper, utilizing DeFi lottery sites is significantly less expensive than conventional lottery platforms
+
 ## Rules of the game
 
 ### Ranking of the card hands from highest to lowest is
@@ -194,7 +208,7 @@ near call <contract-account> play
  1. Only one player is left with unfolded cards and rest of the players jave folded theirs 
  2. When only 2 players remain with unfolded cards and a player calls "show" , then the winner is decided upon the hierarchy of their cards 
 
-All the tokens staked in the game is then transferred to the winner instantly !
+All the tokens staked in the game is then transferred to the winner instantly !(under development)
  
  ## Get more info
 
